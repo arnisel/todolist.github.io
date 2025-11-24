@@ -1,7 +1,9 @@
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for
+import os
+from flask import Flask, render_template, request, redirect, url_for, session
 
 app = Flask(__name__, template_folder='templates')
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key')
 
 
 @app.context_processor
@@ -64,7 +66,7 @@ def index():
     this_week = sum(1 for t in TASKS if t.get('status') == 'done')
     upcoming = sum(1 for t in TASKS if t.get('status') == 'in_progress')
     data = {
-        'user_name': 'Arnis',
+        'user_name': session.get('user', 'Arnis'),
         'today_tasks': today_tasks,
         'this_week': this_week,
         'upcoming': upcoming
@@ -74,7 +76,7 @@ def index():
 
 @app.route('/tasks')
 def tasks():
-    return render_template('tasks.html', user_name='Arnis', tasks=TASKS)
+    return render_template('tasks.html', user_name=session.get('user', 'Arnis'), tasks=TASKS)
 
 
 @app.route('/add_task', methods=['POST'])
@@ -130,19 +132,77 @@ def toggle_task():
 @app.route('/projects')
 def projects():
     # placeholder projects view
-    return render_template('projects.html', user_name='Arnis')
+    return render_template('projects.html', user_name=session.get('user', 'Arnis'))
 
 
 @app.route('/reports')
 def reports():
     # placeholder reports view
-    return render_template('reports.html', user_name='Arnis')
+    return render_template('reports.html', user_name=session.get('user', 'Arnis'))
 
 
 @app.route('/calendar')
 def calendar():
     # simple placeholder calendar page
-    return render_template('calendar.html', user_name='Arnis')
+    return render_template('calendar.html', user_name=session.get('user', 'Arnis'))
+
+
+@app.before_request
+def require_login():
+    # Allow unauthenticated access to login, register and static assets
+    allowed_endpoints = ('login', 'register', 'static')
+    # if endpoint is None (weird requests) or in allowed, skip
+    endpoint = request.endpoint
+    if endpoint is None or endpoint in allowed_endpoints:
+        return
+    if not session.get('user'):
+        # preserve next param to redirect after login
+        return redirect(url_for('login', next=request.path))
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    # Demo login: set session and redirect to home (or next)
+    if session.get('user'):
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        if email:
+            session['user'] = email
+            # redirect to next if provided
+            next_url = request.args.get('next') or url_for('index')
+            return redirect(next_url)
+        return render_template('login.html')
+
+    return render_template('login.html')
+
+
+@app.route('/logout')
+def logout():
+    session.pop('user', None)
+    return redirect(url_for('login'))
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    # Demo registration: create session user and redirect to index
+    if session.get('user'):
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        password_confirm = request.form.get('password_confirm')
+        # very basic validation
+        if email and password and password == password_confirm:
+            session['user'] = email
+            return redirect(url_for('index'))
+        # in case of failure, re-render the form (no flash for simplicity)
+        return render_template('register.html')
+
+    return render_template('register.html')
 
 
 if __name__ == '__main__':
