@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Raporlar - Görev Yöneticisi{% endblock %}
+
+{% block page_header %}
+<header class="flex items-center justify-between whitespace-nowrap border-b border-subtle-light dark:border-subtle-dark/50 px-6 py-4">
+  <div class="flex items-center gap-3">
+    <span class="material-symbols-outlined fill text-primary text-3xl">bar_chart</span>
+    <h2 class="text-xl font-bold">Raporlar</h2>
+  </div>
+  <div>
+    <a href="{{ url_for('reports') }}" class="text-sm font-bold">Raporlar</a>
+  </div>
+</header>
+{% endblock %}
+
+{% block content %}
+  <div class="py-8">
+    <p class="text-lg text-text-subtle-light dark:text-text-subtle-dark">Raporlar sayfası - ilerleme görünümleri ve istatistikler burada görüntülenecek.</p>
+  </div>
+{% endblock %}

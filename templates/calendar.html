@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Takvim - Görev Yöneticisi{% endblock %}
+
+{% block page_header %}
+<header class="flex items-center justify-between whitespace-nowrap border-b border-subtle-light dark:border-subtle-dark/50 px-6 py-4">
+  <div class="flex items-center gap-3">
+    <span class="material-symbols-outlined text-primary text-3xl">calendar_today</span>
+    <h2 class="text-xl font-bold">Takvim</h2>
+  </div>
+  <div>
+    <a href="{{ url_for('index') }}" class="text-sm underline">Gösterge Paneli</a>
+  </div>
+</header>
+{% endblock %}
+
+{% block content %}
+  <div class="py-8">
+    <p class="text-lg text-text-subtle-light dark:text-text-subtle-dark">Takvim görünümü: burada aylık/günlük planlama bileşeni yer alacak. Bu örnek sayfa statik bir yer tutucudur.</p>
+    <div class="mt-6 rounded-lg p-6 bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark">
+      <p class="text-sm text-text-subtle-light">Örnek: 24 Kasım 2025 - Toplantı, 10:00</p>
+      <p class="text-sm text-text-subtle-light">25 Aralık 2025 - Proje Alfa teslim</p>
+    </div>
+  </div>
+{% endblock %}

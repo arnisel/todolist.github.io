@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Ana Sayfa - Görev Yöneticisi{% endblock %}
+
+{% block content %}
+  <!-- Stats Section -->
+  <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="flex flex-col gap-2 rounded-lg p-6 bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark shadow-soft transition-colors duration-300">
+      <p class="text-base font-medium text-text-light dark:text-text-dark">Bugün Yapılacak İşler</p>
+      <p class="text-4xl font-bold tracking-tight text-primary">{{ today_tasks }}</p>
+    </div>
+    <div class="flex flex-col gap-2 rounded-lg p-6 bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark shadow-soft transition-colors duration-300">
+      <p class="text-base font-medium text-text-light dark:text-text-dark">Bu Hafta Tamamlananlar</p>
+      <p class="text-4xl font-bold tracking-tight text-primary">{{ this_week }}</p>
+    </div>
+    <div class="flex flex-col gap-2 rounded-lg p-6 bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark shadow-soft transition-colors duration-300">
+      <p class="text-base font-medium text-text-light dark:text-text-dark">Yaklaşan Görevler</p>
+      <p class="text-4xl font-bold tracking-tight text-primary">{{ upcoming }}</p>
+    </div>
+  </div>
+
+  <!-- Placeholder for Task List or other content -->
+  <div class="mt-12 flex h-96 items-center justify-center rounded-lg border-2 border-dashed border-border-light dark:border-border-dark">
+    <p class="text-text-muted-light dark:text-text-muted-dark">Gelecek içerik alanı</p>
+  </div>
+{% endblock %}

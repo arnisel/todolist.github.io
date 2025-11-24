@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="tr" class="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Görev Yöneticisi{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <style>
+    .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24}
+    .material-symbols-outlined.fill{font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24}
+  </style>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          'primary': '#D4AF37',
+          'background-light': '#FFFFFF',
+          'background-dark': '#1A1A1A',
+          'text-light': '#1A1A1A',
+          'text-dark': '#FFFFFF',
+          'card-light': '#F5F5F5',
+          'card-dark': '#2C2C2C',
+          'border-light': '#E0E0E0',
+          'border-dark': '#424242',
+          'text-muted-light': '#6B7280',
+          'text-muted-dark': '#9CA3AF'
+        },
+        fontFamily: { 'display': ['Inter','sans-serif'] },
+        borderRadius: { DEFAULT: '8px', lg: '12px', xl: '16px', full: '9999px' },
+        boxShadow: { 'soft': '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)'}
+      }}
+    }
+  </script>
+  {% block head_extra %}{% endblock %}
+  <style>body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }</style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
+  <div class="flex h-screen w-full">
+    <!-- SideNavBar -->
+    <aside class="flex w-64 flex-col justify-between bg-card-light dark:bg-card-dark p-6 transition-colors duration-300">
+      <div class="flex flex-col gap-8">
+        <div class="flex flex-col">
+          <h1 class="text-text-light dark:text-text-dark text-xl font-bold">Görev Yöneticisi</h1>
+          <p class="text-text-muted-light dark:text-text-muted-dark text-sm">logo-placeholder</p>
+        </div>
+        <nav class="flex flex-col gap-2">
+          <a class="flex items-center gap-3 rounded px-3 py-2 text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5 {% if request.endpoint == 'tasks' %}bg-primary/20 text-primary{% endif %}" href="{{ url_for('tasks') }}">
+            <span class="material-symbols-outlined text-text-muted-light dark:text-text-muted-dark">task_alt</span>
+            <p class="text-sm font-medium">Görevler</p>
+          </a>
+          <a class="flex items-center gap-3 rounded px-3 py-2 text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5 {% if request.endpoint == 'projects' %}bg-primary/20 text-primary{% endif %}" href="{{ url_for('projects') }}">
+            <span class="material-symbols-outlined text-text-muted-light dark:text-text-muted-dark">cases</span>
+            <p class="text-sm font-medium">Projeler</p>
+          </a>
+          <a class="flex items-center gap-3 rounded px-3 py-2 text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5 {% if request.endpoint == 'calendar' %}bg-primary/20 text-primary{% endif %}" href="{{ url_for('calendar') }}">
+            <span class="material-symbols-outlined text-text-muted-light dark:text-text-muted-dark">calendar_today</span>
+            <p class="text-sm font-medium">Takvim</p>
+          </a>
+          <a class="flex items-center gap-3 rounded px-3 py-2 hover:bg-black/5 dark:hover:bg-white/5 {% if request.endpoint == 'reports' %}bg-primary/20 text-primary{% else %}text-text-light dark:text-text-dark{% endif %}" href="{{ url_for('reports') }}">
+            <span class="material-symbols-outlined fill">bar_chart</span>
+            <p class="text-sm font-medium">Raporlar</p>
+          </a>
+        </nav>
+      </div>
+      <div class="flex flex-col gap-1">
+        <a class="flex items-center gap-3 rounded px-3 py-2 text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5" href="#">
+          <span class="material-symbols-outlined text-text-muted-light dark:text-text-muted-dark">account_circle</span>
+          <p class="text-sm font-medium">Profil</p>
+        </a>
+        <a class="flex items-center gap-3 rounded px-3 py-2 text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5" href="#">
+          <span class="material-symbols-outlined text-text-muted-light dark:text-text-muted-dark">logout</span>
+          <p class="text-sm font-medium">Çıkış</p>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-8 md:p-12">
+      <div class="mx-auto max-w-7xl">
+        {% block page_header %}
+          {% include '_header.html' %}
+        {% endblock %}
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+
+  {% include '_footer.html' %}
+
+  <!-- New Task Modal (global) -->
+  <div id="newTaskModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/40"></div>
+    <div class="relative w-full max-w-xl rounded-lg bg-card-light dark:bg-card-dark p-6 z-10">
+      <h3 class="text-lg font-bold mb-4">Yeni Görev Ekle</h3>
+      <form id="newTaskForm" method="post" action="{{ url_for('add_task') }}" class="space-y-3">
+        <div>
+          <label class="text-sm">Başlık</label>
+          <input name="title" required class="w-full rounded border px-3 py-2 mt-1 bg-white/0 dark:bg-card-dark text-text-light" />
+        </div>
+        <div>
+          <label class="text-sm">Proje</label>
+          <input name="project" class="w-full rounded border px-3 py-2 mt-1 bg-white/0 dark:bg-card-dark text-text-light" />
+        </div>
+        <div>
+          <label class="text-sm">Açıklama</label>
+          <textarea name="description" rows="3" class="w-full rounded border px-3 py-2 mt-1 bg-white/0 dark:bg-card-dark text-text-light"></textarea>
+        </div>
+        <div class="flex gap-3">
+          <div class="flex-1">
+            <label class="text-sm">Öncelik</label>
+            <select name="priority" class="w-full rounded border px-3 py-2 mt-1 bg-white/0 dark:bg-card-dark text-text-light">
+              <option value="high">Yüksek</option>
+              <option value="medium" selected>Orta</option>
+              <option value="low">Düşük</option>
+            </select>
+          </div>
+          <div class="flex-1">
+            <label class="text-sm">Son Tarih</label>
+            <input type="date" name="due_sort" class="w-full rounded border px-3 py-2 mt-1 bg-white/0 dark:bg-card-dark text-text-light" />
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" id="cancelNewTask" class="px-4 py-2 rounded bg-subtle-light/60 dark:bg-card-dark">İptal</button>
+          <button type="submit" class="px-4 py-2 rounded bg-primary text-black font-bold">Ekle</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Global UI handlers: new task modal, color mode and view toggles
+    (function(){
+      const modal = document.getElementById('newTaskModal');
+      const openBtns = Array.from(document.querySelectorAll('.js-open-new-task'));
+      const cancelBtn = document.getElementById('cancelNewTask');
+      openBtns.forEach(b => b && b.addEventListener('click', ()=>{ if(modal) modal.classList.remove('hidden'); }));
+      if(cancelBtn) cancelBtn.addEventListener('click', ()=>{ if(modal) modal.classList.add('hidden'); });
+
+      // color mode toggle (any element with .js-toggle-color)
+      const colorToggles = Array.from(document.querySelectorAll('.js-toggle-color'));
+      function setDark(isDark){
+        const html = document.documentElement;
+        if(isDark) html.classList.add('dark'); else html.classList.remove('dark');
+        try{ localStorage.setItem('prefers-dark', isDark ? '1' : '0'); }catch(e){}
+      }
+      // init from storage
+      try{ if(localStorage.getItem('prefers-dark') === '1') setDark(true); }catch(e){}
+      colorToggles.forEach(btn=> btn && btn.addEventListener('click', ()=>{ const isDark = !document.documentElement.classList.contains('dark'); setDark(isDark); }));
+
+      // view toggles: elements with .js-view-grid and .js-view-list
+      const viewGridBtns = Array.from(document.querySelectorAll('.js-view-grid'));
+      const viewListBtns = Array.from(document.querySelectorAll('.js-view-list'));
+      function setGridView(){
+        const g = document.getElementById('tasksGrid');
+        if(!g) return;
+        g.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+      }
+      function setListView(){
+        const g = document.getElementById('tasksGrid');
+        if(!g) return;
+        g.className = 'flex flex-col gap-4';
+      }
+      viewGridBtns.forEach(b=> b && b.addEventListener('click', setGridView));
+      viewListBtns.forEach(b=> b && b.addEventListener('click', setListView));
+    })();
+  </script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>
