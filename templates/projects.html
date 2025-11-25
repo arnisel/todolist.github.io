@@ -1,21 +1,118 @@
 {% extends 'base.html' %}
 
-{% block title %}Projeler - Görev Yöneticisi{% endblock %}
-
-{% block page_header %}
-<header class="flex items-center justify-between whitespace-nowrap border-b border-subtle-light dark:border-subtle-dark/50 px-6 py-4">
-  <div class="flex items-center gap-3">
-    <span class="material-symbols-outlined text-primary text-3xl">cases</span>
-    <h2 class="text-xl font-bold">Projeler</h2>
-  </div>
-  <div>
-    <a href="{{ url_for('projects') }}" class="text-sm font-bold">Projeler</a>
-  </div>
-</header>
-{% endblock %}
+{% block title %}Projelerim - Görev Yöneticisi{% endblock %}
 
 {% block content %}
-  <div class="py-8">
-    <p class="text-lg text-text-subtle-light dark:text-text-subtle-dark">Projelerinizi burada görebilir ve yönetebilirsiniz. (Örnek içerik)</p>
+  <div class="px-4 sm:px-8 md:px-16 lg:px-24 xl:px-40 flex flex-1 justify-center py-5">
+    <div class="layout-content-container flex flex-col w-full max-w-[960px] flex-1">
+      <!-- TopNavBar -->
+      <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-gray-200/10 dark:border-white/10 px-4 sm:px-6 md:px-10 py-3">
+        <div class="flex items-center gap-4 text-black dark:text-white">
+          <div class="text-primary size-6">
+            <span class="material-symbols-outlined text-3xl">task_alt</span>
+          </div>
+          <h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">Görev Yöneticisi</h2>
+        </div>
+        <button class="js-toggle-color flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 w-10 bg-gray-200/50 dark:bg-white/10 text-black dark:text-white text-sm font-bold leading-normal tracking-[0.015em]">
+          <span class="material-symbols-outlined">dark_mode</span>
+        </button>
+      </header>
+
+      <!-- PageHeading & CTA -->
+      <div class="flex flex-wrap items-center justify-between gap-4 p-4 mt-6">
+        <p class="text-black dark:text-white text-4xl font-black leading-tight tracking-[-0.033em] min-w-72">Projelerim</p>
+        <button type="button" class="js-open-new-project flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-black text-sm font-bold leading-normal tracking-[0.015em] gap-2 hover:opacity-90 transition-opacity">
+          <span class="material-symbols-outlined text-lg">add</span>
+          <span class="truncate">Yeni Proje Oluştur</span>
+        </button>
+      </div>
+
+      <!-- SearchBar -->
+      <div class="px-4 py-3">
+        <label class="flex flex-col min-w-40 h-12 w-full">
+          <div class="flex w-full flex-1 items-stretch rounded-lg h-full">
+            <div class="text-gray-500 dark:text-gray-400 flex border-none bg-gray-100 dark:bg-black/20 items-center justify-center pl-4 rounded-l-lg border-r-0">
+              <span class="material-symbols-outlined">search</span>
+            </div>
+            <input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg text-black dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border-none bg-gray-100 dark:bg-black/20 h-full placeholder:text-gray-500 dark:placeholder:text-gray-400 pl-2 text-base font-normal leading-normal" placeholder="Projelerde ara..." value=""/>
+          </div>
+        </label>
+      </div>
+
+      <!-- Project Cards Grid -->
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-4 p-4">
+        {% for p in projects %}
+        <div class="flex flex-col gap-4 rounded-xl bg-white dark:bg-black/20 p-5 border border-transparent hover:border-primary/50 transition-all shadow-sm hover:shadow-lg hover:shadow-primary/10">
+          <p class="text-black dark:text-white text-lg font-bold leading-normal">{{ p.name }}</p>
+          <p class="text-gray-600 dark:text-gray-300 text-sm font-normal leading-normal">{{ p.task_count }} Görev</p>
+          <div class="flex items-center gap-3">
+            <div class="w-full bg-gray-200 dark:bg-white/10 rounded-full h-2">
+              <div class="bg-primary h-2 rounded-full" data-percent="{{ p.percent }}" style="width:0;"></div>
+            </div>
+            <p class="text-black dark:text-white text-sm font-medium leading-normal">{{ p.percent }}%</p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Empty State Example -->
+      {% if projects|length == 0 %}
+      <div class="flex flex-col p-4 mt-8">
+        <div class="flex flex-col items-center gap-6 rounded-xl border-2 border-dashed border-gray-300 dark:border-white/20 px-6 py-14 text-center">
+          <span class="material-symbols-outlined text-5xl text-gray-400 dark:text-gray-500">folder_off</span>
+          <div class="flex max-w-[480px] flex-col items-center gap-2">
+            <p class="text-black dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">Henüz projeniz yok</p>
+            <p class="text-gray-600 dark:text-gray-300 text-sm font-normal leading-normal">İlk projenizi oluşturarak görevlerinizi yönetmeye başlayın!</p>
+          </div>
+          <button type="button" class="js-open-new-project flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-black text-sm font-bold leading-normal tracking-[0.015em] gap-2 hover:opacity-90 transition-opacity">
+            <span class="material-symbols-outlined text-lg">add</span>
+            <span class="truncate">İlk Projeni Oluştur</span>
+          </button>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
   </div>
+  <script>
+    // Apply progress widths on the client to avoid template/CSS parsing issues
+    (function(){
+      document.querySelectorAll('[data-percent]').forEach(function(el){
+        var v = el.getAttribute('data-percent') || '0';
+        el.style.width = v + '%';
+      });
+    })();
+  </script>
+  <!-- New Project Modal -->
+  <div id="newProjectModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/40"></div>
+    <div class="relative w-full max-w-lg rounded-lg bg-white dark:bg-card-dark p-6 z-10">
+      <h3 class="text-lg font-bold mb-4">Yeni Proje Oluştur</h3>
+      <form id="newProjectForm" method="post" action="{{ url_for('add_project') }}" class="space-y-3">
+        <div>
+          <label class="text-sm">Proje Adı</label>
+          <input name="name" required class="w-full rounded border px-3 py-2 mt-1 bg-white/0 dark:bg-card-dark text-text-light" />
+        </div>
+        <div>
+          <label class="text-sm">Açıklama (isteğe bağlı)</label>
+          <textarea name="description" rows="3" class="w-full rounded border px-3 py-2 mt-1 bg-white/0 dark:bg-card-dark text-text-light"></textarea>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" id="cancelNewProject" class="px-4 py-2 rounded bg-subtle-light/60 dark:bg-card-dark">İptal</button>
+          <button type="submit" class="px-4 py-2 rounded bg-primary text-black font-bold">Oluştur</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // local handlers for project modal
+    (function(){
+      const modal = document.getElementById('newProjectModal');
+      const openBtns = Array.from(document.querySelectorAll('.js-open-new-project'));
+      const cancelBtn = document.getElementById('cancelNewProject');
+      openBtns.forEach(b => b && b.addEventListener('click', ()=>{ if(modal) modal.classList.remove('hidden'); }));
+      if(cancelBtn) cancelBtn.addEventListener('click', ()=>{ if(modal) modal.classList.add('hidden'); });
+    })();
+  </script>
 {% endblock %}

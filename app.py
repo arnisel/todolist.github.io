@@ -58,6 +58,9 @@ TASKS = [
     }
 ]
 
+# In-memory projects list (names). Persistent storage recommended for production.
+PROJECTS = []
+
 
 @app.route('/')
 def index():
@@ -131,14 +134,71 @@ def toggle_task():
 
 @app.route('/projects')
 def projects():
-    # placeholder projects view
-    return render_template('projects.html', user_name=session.get('user', 'Arnis'))
+    # aggregate TASKS into projects summary
+    from collections import defaultdict
+
+    proj_map = defaultdict(lambda: {'task_count': 0, 'completed': 0})
+    for t in TASKS:
+        name = t.get('project') or 'Genel'
+        proj_map[name]['task_count'] += 1
+        if t.get('status') == 'done':
+            proj_map[name]['completed'] += 1
+
+    projects_list = []
+    for name, data in proj_map.items():
+        total = data['task_count']
+        done = data['completed']
+        percent = int(round((done / total) * 100)) if total else 0
+        projects_list.append({
+            'name': name,
+            'task_count': total,
+            'completed': done,
+            'percent': percent,
+            'percent_style': f"width: {percent}%"
+        })
+
+    # include explicitly created projects (may have zero tasks)
+    for pname in PROJECTS:
+        if pname not in proj_map:
+            projects_list.append({
+                'name': pname,
+                'task_count': 0,
+                'completed': 0,
+                'percent': 0,
+                'percent_style': 'width: 0'
+            })
+
+    # sort projects by name
+    projects_list = sorted(projects_list, key=lambda p: p['name'].lower())
+
+    return render_template('projects.html', user_name=session.get('user', 'Arnis'), projects=projects_list)
+
+
+@app.route('/add_project', methods=['POST'])
+def add_project():
+    # naive in-memory project creation
+    name = request.form.get('name')
+    description = request.form.get('description') or ''
+    if name:
+        # ensure PROJECTS exists and add unique
+        try:
+            existing = PROJECTS
+        except NameError:
+            # fallback (shouldn't happen)
+            globals()['PROJECTS'] = []
+            existing = PROJECTS
+        if name not in existing:
+            existing.append(name)
+    return redirect(url_for('projects'))
 
 
 @app.route('/reports')
 def reports():
-    # placeholder reports view
-    return render_template('reports.html', user_name=session.get('user', 'Arnis'))
+    # derive simple stats from TASKS similar to index
+    today_tasks = sum(1 for t in TASKS if t.get('status') == 'todo')
+    this_week = sum(1 for t in TASKS if t.get('status') == 'done')
+    upcoming = sum(1 for t in TASKS if t.get('status') == 'in_progress')
+    return render_template('reports.html', user_name=session.get('user', 'Arnis'), today_tasks=today_tasks, this_week=this_week, upcoming=upcoming)
 
 
 @app.route('/calendar')
