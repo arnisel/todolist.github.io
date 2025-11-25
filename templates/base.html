@@ -57,10 +57,30 @@
     html.dark input::placeholder, html.dark textarea::placeholder { color: rgba(255,255,255,0.75); }
     html:not(.dark) input::placeholder, html:not(.dark) textarea::placeholder { color: rgba(0,0,0,0.5); }
 
-    /* Logo styling: adapt to dark mode by inverting/brightening if needed */
-    .site-logo { display: inline-block; height: 48px; width: auto; }
-    .site-logo--small { display: inline-block; height: 28px; width: auto; }
-    html.dark .site-logo, html.dark .site-logo--small { filter: invert(1) brightness(1.15); }
+    /* Logo sizing and scaling: constrain both variants so large source images don't overflow
+       or display as a wide banner. Use object-fit to preserve aspect ratio. */
+    img.site-logo,
+    img.site-logo--small,
+    img.site-logo-sidebar {
+      display: block;
+      width: auto;
+      max-width: 100%;
+      object-fit: contain;
+      background: transparent;
+    }
+    /* default (larger) logo */
+    img.site-logo { max-width: 220px; max-height: 64px; height: auto; }
+    /* small variant used in login */
+    img.site-logo--small { max-width: 160px; max-height: 36px; height: auto !important; }
+    /* sidebar-specific logo: tighter constraint so it fits the sidebar column */
+    img.site-logo-sidebar { max-width: 140px; max-height: 48px; height: auto !important; }
+    /* dark-mode tweak: invert and brighten so logos with dark design remain visible as a fallback. */
+    html.dark img.site-logo, html.dark img.site-logo--small, html.dark img.site-logo-sidebar { filter: invert(1) brightness(1.15); }
+
+    /* Login-specific logo sizing: make it proportional (50%) but constrain maximum size */
+    img.login-logo { width: 50%; max-width: 120px; max-height: 36px; height: auto !important; }
+    /* Ensure login logo also uses invert/brightness in dark mode (explicit target) */
+    html.dark img.login-logo { filter: invert(1) brightness(1.15); }
 
     body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
   </style>
@@ -70,9 +90,14 @@
     <!-- SideNavBar -->
     <aside class="flex w-64 flex-col justify-between bg-card-light dark:bg-card-dark p-6 transition-colors duration-300">
       <div class="flex flex-col gap-8">
-        <div class="flex flex-col">
-          <h1 class="text-text-light dark:text-text-dark text-xl font-bold">Görev Yöneticisi</h1>
-          <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="Logo" class="site-logo--small mt-2" />
+        <div class="flex items-center gap-3">
+          <!-- Sidebar logo + brand name. Two image files supported: 'logo.jpeg' and optional 'logo-dark.png'.
+               If 'logo-dark.png' is present it will be shown in dark mode; otherwise the light image will
+               be used and an invert filter will apply as a fallback. -->
+          <span class="sidebar-brand flex items-center gap-3">
+            <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="Logo" class="site-logo-sidebar" />
+            <span class="text-text-light dark:text-text-dark font-bold text-lg truncate">TaskMaster</span>
+          </span>
         </div>
         <nav class="flex flex-col gap-2">
           <a class="flex items-center gap-3 rounded px-3 py-2 text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5 {% if request.endpoint == 'tasks' %}bg-primary/20 text-primary{% endif %}" href="{{ url_for('tasks') }}">
