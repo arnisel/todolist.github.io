@@ -47,8 +47,11 @@
 <div class="layout-container flex h-full grow flex-col items-center justify-center w-full">
 <div class="w-full max-w-md space-y-8 rounded-xl bg-white/50 p-6 shadow-sm ring-1 ring-black/5 backdrop-blur-sm dark:bg-black/10 dark:ring-white/10 sm:p-10">
 <div class="text-center">
-<h1 class="text-gray-900 dark:text-white text-3xl font-bold tracking-tight">TaskMaster</h1>
-<p class="text-gray-600 dark:text-gray-400 text-base font-normal leading-normal pt-1">Planla, Yönet, Başar!</p>
+  <div class="flex items-center justify-center gap-3">
+    <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="Logo" class="site-logo--small" />
+  </div>
+  <h1 class="text-gray-900 dark:text-white text-3xl font-bold tracking-tight">TaskMaster</h1>
+  <p class="text-gray-600 dark:text-gray-400 text-base font-normal leading-normal pt-1">Planla, Yönet, Başar!</p>
 </div>
 <div class="space-y-6">
 <form method="post" action="{{ url_for('login') }}">

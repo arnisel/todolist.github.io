@@ -35,7 +35,35 @@
     }
   </script>
   {% block head_extra %}{% endblock %}
-  <style>body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }</style>
+  <style>
+    /* Ensure user-entered text contrasts with the current color theme.
+       Inputs, textareas and selects will be dark in light-mode and white in dark-mode. */
+    html:not(.dark) input,
+    html:not(.dark) textarea,
+    html:not(.dark) select,
+    html:not(.dark) .user-text {
+      color: #1A1A1A !important;
+    }
+
+    html.dark input,
+    html.dark textarea,
+    html.dark select,
+    html.dark .user-text {
+      color: #FFFFFF !important;
+    }
+
+    /* Placeholder contrast tweaks */
+    input::placeholder, textarea::placeholder { opacity: 0.7; }
+    html.dark input::placeholder, html.dark textarea::placeholder { color: rgba(255,255,255,0.75); }
+    html:not(.dark) input::placeholder, html:not(.dark) textarea::placeholder { color: rgba(0,0,0,0.5); }
+
+    /* Logo styling: adapt to dark mode by inverting/brightening if needed */
+    .site-logo { display: inline-block; height: 48px; width: auto; }
+    .site-logo--small { display: inline-block; height: 28px; width: auto; }
+    html.dark .site-logo, html.dark .site-logo--small { filter: invert(1) brightness(1.15); }
+
+    body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+  </style>
 </head>
 <body class="font-display bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
   <div class="flex h-screen w-full">
@@ -44,7 +72,7 @@
       <div class="flex flex-col gap-8">
         <div class="flex flex-col">
           <h1 class="text-text-light dark:text-text-dark text-xl font-bold">Görev Yöneticisi</h1>
-          <p class="text-text-muted-light dark:text-text-muted-dark text-sm">logo-placeholder</p>
+          <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="Logo" class="site-logo--small mt-2" />
         </div>
         <nav class="flex flex-col gap-2">
           <a class="flex items-center gap-3 rounded px-3 py-2 text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5 {% if request.endpoint == 'tasks' %}bg-primary/20 text-primary{% endif %}" href="{{ url_for('tasks') }}">
@@ -66,10 +94,6 @@
         </nav>
       </div>
       <div class="flex flex-col gap-1">
-        <a class="flex items-center gap-3 rounded px-3 py-2 text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5" href="#">
-          <span class="material-symbols-outlined text-text-muted-light dark:text-text-muted-dark">account_circle</span>
-          <p class="text-sm font-medium">Profil</p>
-        </a>
         <a class="flex items-center gap-3 rounded px-3 py-2 text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5" href="{{ url_for('logout') }}">
           <span class="material-symbols-outlined text-text-muted-light dark:text-text-muted-dark">logout</span>
           <p class="text-sm font-medium">Çıkış</p>
@@ -96,6 +120,7 @@
     <div class="relative w-full max-w-xl rounded-lg bg-card-light dark:bg-card-dark p-6 z-10">
       <h3 class="text-lg font-bold mb-4">Yeni Görev Ekle</h3>
       <form id="newTaskForm" method="post" action="{{ url_for('add_task') }}" class="space-y-3">
+        <input type="hidden" name="next" id="newTaskNext" value="" />
         <div>
           <label class="text-sm">Başlık</label>
           <input name="title" required class="w-full rounded border px-3 py-2 mt-1 bg-white/0 dark:bg-card-dark text-text-light" />
@@ -136,7 +161,11 @@
       const modal = document.getElementById('newTaskModal');
       const openBtns = Array.from(document.querySelectorAll('.js-open-new-task'));
       const cancelBtn = document.getElementById('cancelNewTask');
-      openBtns.forEach(b => b && b.addEventListener('click', ()=>{ if(modal) modal.classList.remove('hidden'); }));
+      const newTaskNext = document.getElementById('newTaskNext');
+      openBtns.forEach(b => b && b.addEventListener('click', ()=>{ 
+        if(newTaskNext) newTaskNext.value = window.location.pathname + window.location.search;
+        if(modal) modal.classList.remove('hidden'); 
+      }));
       if(cancelBtn) cancelBtn.addEventListener('click', ()=>{ if(modal) modal.classList.add('hidden'); });
 
       // color mode toggle (any element with .js-toggle-color)

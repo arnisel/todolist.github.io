@@ -110,6 +110,10 @@ def add_task():
         'due_sort': due_sort,
         'status': 'todo'
     })
+    # if the form included a `next` target (for returning to calendar), redirect there
+    next_target = request.form.get('next') or request.args.get('next')
+    if next_target:
+        return redirect(next_target)
     return redirect(url_for('tasks'))
 
 
@@ -203,8 +207,68 @@ def reports():
 
 @app.route('/calendar')
 def calendar():
-    # simple placeholder calendar page
-    return render_template('calendar.html', user_name=session.get('user', 'Arnis'))
+    # build a month calendar and map TASKS to dates (uses TASKS[*]['due_sort'] if present)
+    import calendar as _calendar
+    from datetime import date
+
+    # allow navigation via query params
+    try:
+        year = int(request.args.get('year', ''))
+        month = int(request.args.get('month', ''))
+    except Exception:
+        today = datetime.utcnow().date()
+        year = today.year
+        month = today.month
+
+    # if year/month missing or invalid, default to today
+    if not (1 <= month <= 12):
+        today = datetime.utcnow().date()
+        year = today.year
+        month = today.month
+
+    cal = _calendar.Calendar(firstweekday=0)
+    month_weeks = cal.monthdatescalendar(year, month)
+
+    # Build serializable structure for template
+    calendar_weeks = []
+    for week in month_weeks:
+        w = []
+        for d in week:
+            w.append({
+                'day': d.day,
+                'iso': d.isoformat(),
+                'in_month': (d.month == month)
+            })
+        calendar_weeks.append(w)
+
+    # map events by iso date
+    events = {}
+    for t in TASKS:
+        ds = t.get('due_sort')
+        if ds:
+            events.setdefault(ds, []).append({
+                'id': t.get('id'),
+                'title': t.get('title'),
+                'project': t.get('project'),
+                'status': t.get('status')
+            })
+
+    # compute prev/next month
+    prev_month = month - 1
+    prev_year = year
+    if prev_month < 1:
+        prev_month = 12
+        prev_year -= 1
+    next_month = month + 1
+    next_year = year
+    if next_month > 12:
+        next_month = 1
+        next_year += 1
+
+    turkish_months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık']
+    month_title = f"{turkish_months[month-1]} {year}"
+
+    return render_template('calendar.html', user_name=session.get('user', 'Arnis'), calendar_weeks=calendar_weeks, events=events, month_title=month_title, prev_year=prev_year, prev_month=prev_month, next_year=next_year, next_month=next_month)
 
 
 @app.before_request
