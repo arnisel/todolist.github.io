@@ -94,10 +94,10 @@
           <!-- Sidebar logo + brand name. Two image files supported: 'logo.jpeg' and optional 'logo-dark.png'.
                If 'logo-dark.png' is present it will be shown in dark mode; otherwise the light image will
                be used and an invert filter will apply as a fallback. -->
-          <span class="sidebar-brand flex items-center gap-3">
+          <a href="{{ url_for('index') }}" class="sidebar-brand flex items-center gap-3 no-underline">
             <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="Logo" class="site-logo-sidebar" />
             <span class="text-text-light dark:text-text-dark font-bold text-lg truncate">TaskMaster</span>
-          </span>
+          </a>
         </div>
         <nav class="flex flex-col gap-2">
           <a class="flex items-center gap-3 rounded px-3 py-2 text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5 {% if request.endpoint == 'tasks' %}bg-primary/20 text-primary{% endif %}" href="{{ url_for('tasks') }}">
@@ -172,6 +172,20 @@
             <input type="date" name="due_sort" class="w-full rounded border px-3 py-2 mt-1 bg-white/0 dark:bg-card-dark text-text-light" />
           </div>
         </div>
+
+          <!-- Upcoming tasks modal (1 day left) -->
+          <div id="upcomingModal" class="hidden fixed inset-0 z-60 flex items-center justify-center">
+            <div class="absolute inset-0 bg-black/50"></div>
+            <div class="relative w-full max-w-lg rounded-lg bg-card-light dark:bg-card-dark p-6 z-10">
+              <div class="flex items-start justify-between gap-4">
+                <h3 class="text-lg font-bold">Yaklaşan Görevler</h3>
+                <button id="closeUpcoming" class="text-sm text-text-muted-light dark:text-text-muted-dark">Kapat</button>
+              </div>
+              <div id="upcomingList" class="mt-4 space-y-3">
+                <!-- Filled dynamically -->
+              </div>
+            </div>
+          </div>
         <div class="flex justify-end gap-2 pt-2">
           <button type="button" id="cancelNewTask" class="px-4 py-2 rounded bg-subtle-light/60 dark:bg-card-dark">İptal</button>
           <button type="submit" class="px-4 py-2 rounded bg-primary text-black font-bold">Ekle</button>
@@ -219,6 +233,39 @@
       }
       viewGridBtns.forEach(b=> b && b.addEventListener('click', setGridView));
       viewListBtns.forEach(b=> b && b.addEventListener('click', setListView));
+    })();
+    
+    // Check for upcoming tasks (due tomorrow) and show modal
+    (function(){
+      async function checkUpcoming(){
+        try{
+          const res = await fetch('/api/upcoming');
+          if(!res.ok) return;
+          const data = await res.json();
+          if(data.count && data.tasks && data.tasks.length){
+            const list = document.getElementById('upcomingList');
+            list.innerHTML = '';
+            data.tasks.forEach(t => {
+              const el = document.createElement('div');
+              el.className = 'p-3 rounded border border-border-light dark:border-border-dark bg-white/0 dark:bg-card-dark';
+              el.innerHTML = `<div class="flex items-center justify-between"><div><div class="font-bold">${escapeHtml(t.title)}</div><div class="text-sm text-text-muted-light dark:text-text-muted-dark">${escapeHtml(t.project || '')} — ${t.due_sort}</div></div><div class="text-sm text-primary font-semibold">1 gün kaldı</div></div>`;
+              list.appendChild(el);
+            });
+            const modal = document.getElementById('upcomingModal');
+            if(modal) modal.classList.remove('hidden');
+          }
+        }catch(e){ console.error('upcoming fetch', e); }
+      }
+
+      function escapeHtml(unsafe){
+        return unsafe ? unsafe.replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m]; }) : '';
+      }
+
+      const closeBtn = document.getElementById('closeUpcoming');
+      if(closeBtn) closeBtn.addEventListener('click', ()=>{ const modal = document.getElementById('upcomingModal'); if(modal) modal.classList.add('hidden'); });
+
+      // Run shortly after load
+      window.addEventListener('load', ()=>{ setTimeout(checkUpcoming, 800); });
     })();
   </script>
 

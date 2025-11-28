@@ -268,6 +268,29 @@ def calendar():
     return render_template('calendar.html', user_name=session.get('user', 'Arnis'), calendar_weeks=calendar_weeks, events=events, month_title=month_title, prev_year=prev_year, prev_month=prev_month, next_year=next_year, next_month=next_month)
 
 
+@app.route('/api/upcoming')
+def api_upcoming():
+    """Return JSON list of tasks due tomorrow (1 day left) and not completed."""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        # Select tasks with due_sort equal to tomorrow's date and not done
+        cur.execute("SELECT * FROM tasks WHERE due_sort IS NOT NULL AND due_sort <> '' AND DATE(due_sort) = DATE('now','+1 day') AND status != 'done'")
+        rows = cur.fetchall()
+        tasks = []
+        for r in rows:
+            tasks.append({
+                'id': r['id'],
+                'project': r['project'],
+                'title': r['title'],
+                'due_sort': r['due_sort'],
+                'status': r['status']
+            })
+        return jsonify({'count': len(tasks), 'tasks': tasks})
+    finally:
+        conn.close()
+
+
 @app.before_request
 def require_login():
     # Allow unauthenticated access to login, register and static assets

@@ -2,11 +2,13 @@
 <div class="flex flex-wrap items-center justify-between gap-4 border-b border-border-light dark:border-border-dark pb-8 mb-8">
   <div class="flex min-w-72 flex-col">
       <div class="flex items-center gap-4">
-        <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="Logo" class="site-logo" />
-        <div class="flex flex-col">
-          <p class="text-text-light dark:text-text-dark text-3xl font-black leading-tight tracking-tight">Hoş Geldiniz, {{ user_name }}!</p>
-          <p class="text-text-muted-light dark:text-text-muted-dark text-base font-normal">İşte bugünün genel özeti.</p>
-        </div>
+        <a href="{{ url_for('index') }}" class="flex items-center gap-4 no-underline">
+          <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="Logo" class="site-logo" />
+          <div class="flex flex-col">
+            <p class="text-text-light dark:text-text-dark text-3xl font-black leading-tight tracking-tight">Hoş Geldiniz, {{ user_name }}!</p>
+            <p class="text-text-muted-light dark:text-text-muted-dark text-base font-normal">İşte bugünün genel özeti.</p>
+          </div>
+        </a>
       </div>
     </div>
   <button class="js-open-new-task flex min-w-[84px] cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-12 px-5 bg-primary text-[#1A1A1A] text-base font-bold leading-normal tracking-wide shadow-soft hover:opacity-90 transition-opacity">
