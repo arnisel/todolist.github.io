@@ -3,23 +3,81 @@
 {% block title %}Takvim - Görev Yöneticisi{% endblock %}
 
 {% block page_header %}
-<header class="flex items-center justify-between whitespace-nowrap border-b border-subtle-light dark:border-subtle-dark/50 px-6 py-4">
-  <div class="flex items-center gap-3">
-    <span class="material-symbols-outlined text-primary text-3xl">calendar_today</span>
-    <h2 class="text-xl font-bold">Takvim</h2>
-  </div>
-  <div>
-    <a href="{{ url_for('index') }}" class="text-sm underline">Gösterge Paneli</a>
-  </div>
-</header>
+  <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-gray-200/10 dark:border-white/10 px-4 sm:px-6 md:px-10 py-3">
+    <div class="flex items-center gap-4 text-black dark:text-white">
+      <div class="text-primary size-6">
+        <span class="material-symbols-outlined text-3xl">calendar_today</span>
+      </div>
+      <h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">Görev Yöneticisi</h2>
+      <p class="ml-3 text-sm text-gray-600 dark:text-gray-300">Takvim</p>
+    </div>
+    <div class="hidden md:flex flex-1 justify-center max-w-sm">
+      <label class="flex flex-col w-full h-10">
+        <div class="flex w-full flex-1 items-stretch rounded-lg h-full">
+          <div class="text-gray-500 dark:text-gray-400 flex border-none bg-gray-100 dark:bg-black/20 items-center justify-center pl-3 rounded-l-lg border-r-0">
+            <span class="material-symbols-outlined" style="font-size: 20px;">search</span>
+          </div>
+          <input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg text-black dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border-none bg-gray-100 dark:bg-black/20 h-full placeholder:text-gray-500 dark:placeholder:text-gray-400 pl-2 text-sm font-normal leading-normal" placeholder="Görevlerde ara..." value=""/>
+        </div>
+      </label>
+    </div>
+    <div class="flex flex-1 justify-end gap-2 md:gap-4">
+      <button class="js-toggle-color flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 w-10 bg-gray-200/50 dark:bg-white/10 text-black dark:text-white text-sm font-bold leading-normal">
+        <span class="material-symbols-outlined">dark_mode</span>
+      </button>
+    </div>
+  </header>
 {% endblock %}
 
 {% block content %}
-  <div class="py-8">
-    <p class="text-lg text-text-subtle-light dark:text-text-subtle-dark">Takvim görünümü: burada aylık/günlük planlama bileşeni yer alacak. Bu örnek sayfa statik bir yer tutucudur.</p>
-    <div class="mt-6 rounded-lg p-6 bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark">
-      <p class="text-sm text-text-subtle-light">Örnek: 24 Kasım 2025 - Toplantı, 10:00</p>
-      <p class="text-sm text-text-subtle-light">25 Aralık 2025 - Proje Alfa teslim</p>
+  <main class="flex-1 p-4 sm:p-6 md:p-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 px-4 py-3">
+      <div class="flex items-center gap-2">
+        <h1 class="text-black dark:text-white tracking-tight text-4xl font-black leading-tight text-left">{{ month_title if month_title is defined else 'Kasım 2023' }}</h1>
+        <div class="flex gap-1">
+          <a href="{{ url_for('calendar', year=prev_year, month=prev_month) }}" class="p-2 text-text-light/70 dark:text-text-dark/70 hover:text-text-light dark:hover:text-text-dark" title="Önceki ay">
+            <span class="material-symbols-outlined">chevron_left</span>
+          </a>
+          <a href="{{ url_for('calendar', year=next_year, month=next_month) }}" class="p-2 text-text-light/70 dark:text-text-dark/70 hover:text-text-light dark:hover:text-text-dark" title="Sonraki ay">
+            <span class="material-symbols-outlined">chevron_right</span>
+          </a>
+        </div>
+      </div>
     </div>
-  </div>
+
+      <div class="mt-4">
+      <div class="grid grid-cols-7 border-t border-l border-surface-light dark:border-surface-dark rounded-lg overflow-hidden shadow-sm">
+        <!-- Calendar Header -->
+        <div class="text-center py-3 text-sm font-bold text-text-light/80 dark:text-text-dark/80 border-b border-r border-surface-light dark:border-surface-dark bg-surface-light/50 dark:bg-surface-dark/50">Pzt</div>
+        <div class="text-center py-3 text-sm font-bold text-text-light/80 dark:text-text-dark/80 border-b border-r border-surface-light dark:border-surface-dark bg-surface-light/50 dark:bg-surface-dark/50">Sal</div>
+        <div class="text-center py-3 text-sm font-bold text-text-light/80 dark:text-text-dark/80 border-b border-r border-surface-light dark:border-surface-dark bg-surface-light/50 dark:bg-surface-dark/50">Çar</div>
+        <div class="text-center py-3 text-sm font-bold text-text-light/80 dark:text-text-dark/80 border-b border-r border-surface-light dark:border-surface-dark bg-surface-light/50 dark:bg-surface-dark/50">Per</div>
+        <div class="text-center py-3 text-sm font-bold text-text-light/80 dark:text-text-dark/80 border-b border-r border-surface-light dark:border-surface-dark bg-surface-light/50 dark:bg-surface-dark/50">Cum</div>
+        <div class="text-center py-3 text-sm font-bold text-text-light/80 dark:text-text-dark/80 border-b border-r border-surface-light dark:border-surface-dark bg-surface-light/50 dark:bg-surface-dark/50">Cmt</div>
+        <div class="text-center py-3 text-sm font-bold text-text-light/80 dark:text-text-dark/80 border-b border-surface-light dark:border-surface-dark bg-surface-light/50 dark:bg-surface-dark/50">Paz</div>
+
+        <!-- Calendar Body (static example rows) -->
+        {% for week in calendar_weeks|default([]) %}
+        {% for day in week %}
+        <div class="h-40 p-2 border-b border-r border-surface-light dark:border-surface-dark {% if not day.in_month %}bg-surface-light/50 dark:bg-surface-dark/50 text-text-light/60 dark:text-text-dark/60{% endif %}">
+          <div class="flex items-start justify-between">
+            <span class="text-sm font-medium text-black dark:text-white {% if not day.in_month %}opacity-60{% endif %}">{{ day.day }}</span>
+          </div>
+          <div class="mt-2 space-y-1">
+            {% set evs = events.get(day.iso, []) %}
+            {% for e in evs %}
+            <div class="p-1 rounded text-xs font-medium bg-primary/20 text-primary border-l-2 border-primary truncate" title="{{ e.title }}">{{ e.title }}</div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+        {% endfor %}
+      </div>
+    </div>
+  </main>
+
+  <button type="button" class="js-open-new-task fixed bottom-8 right-8 flex items-center justify-center w-14 h-14 bg-primary text-white rounded-full shadow-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background-dark" title="Yeni Görev Ekle" aria-label="Yeni Görev Ekle">
+    <span class="material-symbols-outlined" style="font-size: 28px;">add</span>
+  </button>
+  
 {% endblock %}
