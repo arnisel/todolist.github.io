@@ -50,12 +50,87 @@
 
       <div class="mt-12 flex flex-col gap-6">
         <div class="rounded-lg p-6 bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark">
-          <p class="text-sm text-gray-600 dark:text-gray-300">Günlük ve haftalık ilerleme grafikleri burada gösterilebilir. (Placeholder)</p>
+          <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Günlük ve haftalık ilerleme</p>
+          <div class="w-full">
+            <canvas id="progressChart" class="w-full" height="160"></canvas>
+          </div>
         </div>
         <div class="rounded-lg p-6 bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark">
-          <p class="text-sm text-gray-600 dark:text-gray-300">Proje bazlı tamamlanma oranları ve detaylar burada yer alacak.</p>
+          <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Proje bazlı tamamlanma oranları</p>
+          <div class="w-full max-w-md mx-auto">
+            <canvas id="projectsChart" class="w-full" height="160"></canvas>
+          </div>
         </div>
       </div>
     </div>
   </div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script>
+    // Read data from Jinja variables if provided, otherwise use sample data
+    const dailyLabels = {{ (daily_labels | default(['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'])) | tojson }};
+    const dailyValues = {{ (daily_values | default([2,3,4,3,5,6,4])) | tojson }};
+
+    const weeklyLabels = {{ (weekly_labels | default(['Hafta 1','Hafta 2','Hafta 3','Hafta 4'])) | tojson }};
+    const weeklyValues = {{ (weekly_values | default([20,35,40,55])) | tojson }};
+
+    const projectLabels = {{ (project_labels | default(['Proj A','Proj B','Proj C'])) | tojson }};
+    const projectValues = {{ (project_values | default([60,25,15])) | tojson }};
+
+    // Progress chart: combines daily (line) and weekly (bar) example
+    (function(){
+      const ctx = document.getElementById('progressChart');
+      if(!ctx) return;
+      const config = {
+        type: 'bar',
+        data: {
+          labels: dailyLabels,
+          datasets: [
+            {
+              type: 'line',
+              label: 'Günlük Tamamlanan',
+              data: dailyValues,
+              borderColor: '#D4AF37',
+              backgroundColor: 'rgba(212,175,55,0.08)',
+              tension: 0.3,
+              yAxisID: 'y'
+            },
+            {
+              type: 'bar',
+              label: 'Haftalık Özet',
+              data: weeklyValues.slice(0, dailyValues.length) ,
+              backgroundColor: 'rgba(59,130,246,0.6)',
+              yAxisID: 'y'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'top' } },
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      };
+      // create Chart
+      new Chart(ctx, config);
+    })();
+
+    // Projects completion (doughnut)
+    (function(){
+      const ctx = document.getElementById('projectsChart');
+      if(!ctx) return;
+      const colors = ['#4ade80','#f59e0b','#ef4444','#60a5fa','#a78bfa'];
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: projectLabels,
+          datasets: [{ data: projectValues, backgroundColor: colors.slice(0, projectValues.length) }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+      });
+    })();
+  </script>
 {% endblock %}

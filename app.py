@@ -45,6 +45,13 @@ def init_db():
         '''
     )
     conn.commit()
+    # Add completed_at column if it doesn't exist (safe on repeated runs)
+    try:
+        cur.execute("ALTER TABLE tasks ADD COLUMN completed_at TEXT")
+        conn.commit()
+    except Exception:
+        # column already exists or other issue; ignore
+        pass
     conn.close()
 
 
@@ -78,7 +85,8 @@ def load_all_tasks():
             'priority': r['priority'] or 'medium',
             'due': r['due'] or '',
             'due_sort': r['due_sort'] or '',
-            'status': r['status'] or 'todo'
+            'status': r['status'] or 'todo',
+            'completed_at': r['completed_at'] or ''
         })
     conn.close()
     return tasks
@@ -155,7 +163,12 @@ def toggle_task():
         return jsonify({'error': 'not found'}), 404
     current = row['status']
     new_status = 'todo' if current == 'done' else 'done'
-    cur.execute('UPDATE tasks SET status = ? WHERE id = ?', (new_status, int(tid)))
+    # set or clear completed_at when status changes
+    if new_status == 'done':
+        completed_at = datetime.utcnow().date().isoformat()
+        cur.execute('UPDATE tasks SET status = ?, completed_at = ? WHERE id = ?', (new_status, completed_at, int(tid)))
+    else:
+        cur.execute('UPDATE tasks SET status = ?, completed_at = NULL WHERE id = ?', (new_status, int(tid)))
     conn.commit()
     conn.close()
     return jsonify({'id': int(tid), 'status': new_status})
@@ -288,12 +301,87 @@ def delete_project():
 
 @app.route('/reports')
 def reports():
-    # derive simple stats from DB tasks similar to index
+    # derive stats and chart data from DB tasks
+    from datetime import date, timedelta
     tasks = load_all_tasks()
+
+    # Basic stats (existing)
     today_tasks = sum(1 for t in tasks if t.get('status') == 'todo')
     this_week = sum(1 for t in tasks if t.get('status') == 'done')
     upcoming = sum(1 for t in tasks if t.get('status') == 'in_progress')
-    return render_template('reports.html', user_name=session.get('user', 'Arnis'), today_tasks=today_tasks, this_week=this_week, upcoming=upcoming)
+
+    # Prepare daily data for the last 7 days (counts of done tasks whose due_sort == that date)
+    today = date.today()
+    last7 = [today - timedelta(days=i) for i in range(6, -1, -1)]  # oldest -> newest
+    daily_labels = []
+    daily_values = []
+    for d in last7:
+        daily_labels.append(d.strftime('%a'))  # short weekday
+        iso = d.isoformat()
+        cnt = 0
+        for t in tasks:
+            completed = t.get('completed_at')
+            if not completed:
+                continue
+            try:
+                if completed == iso:
+                    cnt += 1
+            except Exception:
+                continue
+        daily_values.append(cnt)
+
+    # Prepare weekly data for the last 4 weeks (counts of done tasks whose due_sort in that week)
+    # Find start of current week (Monday)
+    current_week_start = today - timedelta(days=today.weekday())
+    weekly_labels = []
+    weekly_values = []
+    for i in range(4):
+        start = current_week_start - timedelta(weeks=(3 - i))
+        end = start + timedelta(days=6)
+        label = f"{start.day}.{start.month}"
+        weekly_labels.append(label)
+        cnt = 0
+        for t in tasks:
+            ds = t.get('completed_at')
+            if not ds:
+                continue
+            try:
+                ds_date = datetime.strptime(ds, '%Y-%m-%d').date()
+            except Exception:
+                continue
+            if start <= ds_date <= end:
+                cnt += 1
+        weekly_values.append(cnt)
+
+    # Project-based completed counts for doughnut chart
+    from collections import defaultdict
+    proj_map = defaultdict(lambda: {'total': 0, 'done': 0})
+    for t in tasks:
+        name = t.get('project') or 'Genel'
+        proj_map[name]['total'] += 1
+        if t.get('status') == 'done':
+            proj_map[name]['done'] += 1
+
+    project_labels = []
+    project_values = []
+    for pname, pdata in proj_map.items():
+        project_labels.append(pname)
+        project_values.append(pdata['done'])
+
+    # Fallbacks handled in template via default; pass Python lists to template (serializable)
+    return render_template(
+        'reports.html',
+        user_name=session.get('user', 'Arnis'),
+        today_tasks=today_tasks,
+        this_week=this_week,
+        upcoming=upcoming,
+        daily_labels=daily_labels,
+        daily_values=daily_values,
+        weekly_labels=weekly_labels,
+        weekly_values=weekly_values,
+        project_labels=project_labels,
+        project_values=project_values
+    )
 
 
 @app.route('/calendar')
