@@ -33,6 +33,17 @@ def init_db():
         )
         '''
     )
+    # projects table to persist project metadata
+    cur.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS projects (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            description TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+        '''
+    )
     conn.commit()
     conn.close()
 
@@ -48,8 +59,7 @@ try:
 except Exception:
     pass
 
-# In-memory projects list (names). Persistent storage recommended for production.
-PROJECTS = []
+# Projects are persisted in the `projects` table in SQLite (see init_db)
 
 
 def load_all_tasks():
@@ -164,7 +174,17 @@ def projects():
         if t.get('status') == 'done':
             proj_map[name]['completed'] += 1
 
+    # load stored projects from DB (so projects with zero tasks are included)
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT id, name, description FROM projects ORDER BY name COLLATE NOCASE')
+    stored = cur.fetchall()
+    conn.close()
+
     projects_list = []
+    seen = set()
+
+    # first, include projects that have tasks (from task aggregation)
     for name, data in proj_map.items():
         total = data['task_count']
         done = data['completed']
@@ -176,17 +196,21 @@ def projects():
             'percent': percent,
             'percent_style': f"width: {percent}%"
         })
+        seen.add(name)
 
-    # include explicitly created projects (may have zero tasks)
-    for pname in PROJECTS:
-        if pname not in proj_map:
-            projects_list.append({
-                'name': pname,
-                'task_count': 0,
-                'completed': 0,
-                'percent': 0,
-                'percent_style': 'width: 0'
-            })
+    # then add stored projects that had no tasks yet
+    for r in stored:
+        pname = r['name']
+        if pname in seen:
+            continue
+        projects_list.append({
+            'id': r['id'],
+            'name': pname,
+            'task_count': 0,
+            'completed': 0,
+            'percent': 0,
+            'percent_style': 'width: 0'
+        })
 
     projects_list = sorted(projects_list, key=lambda p: p['name'].lower())
     return render_template('projects.html', user_name=session.get('user', 'Arnis'), projects=projects_list)
@@ -194,13 +218,72 @@ def projects():
 
 @app.route('/add_project', methods=['POST'])
 def add_project():
-    # naive in-memory project creation
+    # Persist project in SQLite
     name = request.form.get('name')
     description = request.form.get('description') or ''
     if name:
-        if name not in PROJECTS:
-            PROJECTS.append(name)
+        conn = get_db_connection()
+        cur = conn.cursor()
+        try:
+            cur.execute('INSERT OR IGNORE INTO projects (name, description) VALUES (?, ?)', (name, description))
+            conn.commit()
+        finally:
+            conn.close()
     return redirect(url_for('projects'))
+
+
+@app.route('/delete_task', methods=['POST'])
+def delete_task():
+    data = request.get_json() or {}
+    tid = data.get('id') or request.form.get('id')
+    if not tid:
+        return jsonify({'error': 'missing id'}), 400
+    try:
+        tid = int(tid)
+    except Exception:
+        return jsonify({'error': 'invalid id'}), 400
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('DELETE FROM tasks WHERE id = ?', (tid,))
+    conn.commit()
+    conn.close()
+    return jsonify({'ok': True, 'id': tid})
+
+
+@app.route('/delete_project', methods=['POST'])
+def delete_project():
+    data = request.get_json() or {}
+    pid = data.get('id')
+    name = data.get('name') or request.form.get('name')
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        if pid:
+            try:
+                pid = int(pid)
+            except Exception:
+                return jsonify({'error': 'invalid id'}), 400
+            # get name for cascade deletion of tasks
+            cur.execute('SELECT name FROM projects WHERE id = ?', (pid,))
+            row = cur.fetchone()
+            if row:
+                pname = row['name']
+                cur.execute('DELETE FROM projects WHERE id = ?', (pid,))
+                cur.execute('DELETE FROM tasks WHERE project = ?', (pname,))
+                conn.commit()
+                return jsonify({'ok': True, 'id': pid, 'name': pname})
+            else:
+                return jsonify({'error': 'not found'}), 404
+        elif name:
+            # delete tasks with this project name and any project record
+            cur.execute('DELETE FROM projects WHERE name = ?', (name,))
+            cur.execute('DELETE FROM tasks WHERE project = ?', (name,))
+            conn.commit()
+            return jsonify({'ok': True, 'name': name})
+        else:
+            return jsonify({'error': 'missing id or name'}), 400
+    finally:
+        conn.close()
 
 
 @app.route('/reports')
