@@ -39,9 +39,11 @@ def init_db():
         '''
         CREATE TABLE IF NOT EXISTS projects (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL UNIQUE,
+            user TEXT NOT NULL,
+            name TEXT NOT NULL,
             description TEXT,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user, name)
         )
         '''
     )
@@ -71,6 +73,13 @@ def init_db():
         cur.execute("ALTER TABLE tasks ADD COLUMN user TEXT")
         conn.commit()
     except Exception:
+        pass
+    # Add user column to projects table if missing (safe on repeated runs)
+    try:
+        cur.execute("ALTER TABLE projects ADD COLUMN user TEXT")
+        conn.commit()
+    except Exception:
+        # column already exists or other issue; ignore
         pass
     conn.close()
 
@@ -209,10 +218,17 @@ def toggle_task():
 
 @app.route('/projects')
 def projects():
-    # aggregate DB tasks into projects summary
+    # aggregate DB tasks into projects summary (only user's tasks)
     from collections import defaultdict
+    
+    user = session.get('user')
+    if not user:
+        return redirect(url_for('login'))
 
-    tasks = load_all_tasks()
+    # Filter tasks by current user
+    all_tasks = load_all_tasks()
+    tasks = [t for t in all_tasks if t.get('user') == user or not t.get('user')]  # include tasks without user for backwards compat
+    
     proj_map = defaultdict(lambda: {'task_count': 0, 'completed': 0})
     for t in tasks:
         name = t.get('project') or 'Genel'
@@ -220,10 +236,10 @@ def projects():
         if t.get('status') == 'done':
             proj_map[name]['completed'] += 1
 
-    # load stored projects from DB (so projects with zero tasks are included)
+    # load stored projects for current user (so projects with zero tasks are included)
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute('SELECT id, name, description FROM projects ORDER BY name COLLATE NOCASE')
+    cur.execute('SELECT id, name, description FROM projects WHERE user = ? ORDER BY name COLLATE NOCASE', (user,))
     stored = cur.fetchall()
     conn.close()
 
@@ -264,14 +280,18 @@ def projects():
 
 @app.route('/add_project', methods=['POST'])
 def add_project():
-    # Persist project in SQLite
+    # Persist project in SQLite for current user
+    user = session.get('user')
+    if not user:
+        return redirect(url_for('login'))
+    
     name = request.form.get('name')
     description = request.form.get('description') or ''
     if name:
         conn = get_db_connection()
         cur = conn.cursor()
         try:
-            cur.execute('INSERT OR IGNORE INTO projects (name, description) VALUES (?, ?)', (name, description))
+            cur.execute('INSERT OR IGNORE INTO projects (user, name, description) VALUES (?, ?, ?)', (user, name, description))
             conn.commit()
         finally:
             conn.close()
@@ -298,6 +318,10 @@ def delete_task():
 
 @app.route('/delete_project', methods=['POST'])
 def delete_project():
+    user = session.get('user')
+    if not user:
+        return jsonify({'error': 'unauthorized'}), 401
+    
     data = request.get_json() or {}
     pid = data.get('id')
     name = data.get('name') or request.form.get('name')
@@ -309,21 +333,21 @@ def delete_project():
                 pid = int(pid)
             except Exception:
                 return jsonify({'error': 'invalid id'}), 400
-            # get name for cascade deletion of tasks
-            cur.execute('SELECT name FROM projects WHERE id = ?', (pid,))
+            # get name for cascade deletion of tasks, verify ownership
+            cur.execute('SELECT name FROM projects WHERE id = ? AND user = ?', (pid, user))
             row = cur.fetchone()
             if row:
                 pname = row['name']
-                cur.execute('DELETE FROM projects WHERE id = ?', (pid,))
-                cur.execute('DELETE FROM tasks WHERE project = ?', (pname,))
+                cur.execute('DELETE FROM projects WHERE id = ? AND user = ?', (pid, user))
+                cur.execute('DELETE FROM tasks WHERE project = ? AND (user = ? OR user IS NULL)', (pname, user))
                 conn.commit()
                 return jsonify({'ok': True, 'id': pid, 'name': pname})
             else:
-                return jsonify({'error': 'not found'}), 404
+                return jsonify({'error': 'not found or unauthorized'}), 404
         elif name:
-            # delete tasks with this project name and any project record
-            cur.execute('DELETE FROM projects WHERE name = ?', (name,))
-            cur.execute('DELETE FROM tasks WHERE project = ?', (name,))
+            # delete tasks with this project name and any project record for current user
+            cur.execute('DELETE FROM projects WHERE name = ? AND user = ?', (name, user))
+            cur.execute('DELETE FROM tasks WHERE project = ? AND (user = ? OR user IS NULL)', (name, user))
             conn.commit()
             return jsonify({'ok': True, 'name': name})
         else:
@@ -334,9 +358,12 @@ def delete_project():
 
 @app.route('/reports')
 def reports():
-    # derive stats and chart data from DB tasks
+    # derive stats and chart data from DB tasks (user-specific)
     from datetime import date, timedelta
-    tasks = load_all_tasks()
+    user = session.get('user')
+    if not user:
+        return redirect(url_for('login'))
+    tasks = load_all_tasks(user=user)
 
     # Basic stats (existing)
     today_tasks = sum(1 for t in tasks if t.get('status') == 'todo')
@@ -419,8 +446,12 @@ def reports():
 
 @app.route('/calendar')
 def calendar():
-    # build a month calendar and map DB tasks to dates (uses tasks[*]['due_sort'] if present)
+    # build a month calendar and map DB tasks to dates (user-specific)
     import calendar as _calendar
+    
+    user = session.get('user')
+    if not user:
+        return redirect(url_for('login'))
 
     # allow navigation via query params
     try:
@@ -447,9 +478,9 @@ def calendar():
             w.append({'day': d.day, 'iso': d.isoformat(), 'in_month': (d.month == month)})
         calendar_weeks.append(w)
 
-    # map events by iso date from DB
+    # map events by iso date from DB (user-specific)
     events = {}
-    for t in load_all_tasks():
+    for t in load_all_tasks(user=user):
         ds = t.get('due_sort')
         if ds:
             events.setdefault(ds, []).append({'id': t.get('id'), 'title': t.get('title'), 'project': t.get('project'), 'status': t.get('status')})
@@ -474,12 +505,16 @@ def calendar():
 
 @app.route('/api/upcoming')
 def api_upcoming():
-    """Return JSON list of tasks due tomorrow (1 day left) and not completed."""
+    """Return JSON list of tasks due tomorrow (1 day left) and not completed (user-specific)."""
+    user = session.get('user')
+    if not user:
+        return jsonify({'error': 'unauthorized'}), 401
+    
     conn = get_db_connection()
     cur = conn.cursor()
     try:
-        # Select tasks with due_sort equal to tomorrow's date and not done
-        cur.execute("SELECT * FROM tasks WHERE due_sort IS NOT NULL AND due_sort <> '' AND DATE(due_sort) = DATE('now','+1 day') AND status != 'done'")
+        # Select tasks with due_sort equal to tomorrow's date, not done, and belonging to current user
+        cur.execute("SELECT * FROM tasks WHERE due_sort IS NOT NULL AND due_sort <> '' AND DATE(due_sort) = DATE('now','+1 day') AND status != 'done' AND (user = ? OR user IS NULL)", (user,))
         rows = cur.fetchall()
         tasks = []
         for r in rows:
