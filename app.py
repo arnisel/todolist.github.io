@@ -66,6 +66,12 @@ def init_db():
     except Exception:
         # column already exists or other issue; ignore
         pass
+    # Add user column for per-user ownership (non-destructive)
+    try:
+        cur.execute("ALTER TABLE tasks ADD COLUMN user TEXT")
+        conn.commit()
+    except Exception:
+        pass
     conn.close()
 
 
@@ -83,11 +89,14 @@ except Exception:
 # Projects are persisted in the `projects` table in SQLite (see init_db)
 
 
-def load_all_tasks():
-    """Load all tasks from the DB and return a list of dicts (same shape as older TASKS)."""
+def load_all_tasks(user=None):
+    """Load tasks from the DB. If `user` is provided, return only that user's tasks."""
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM tasks ORDER BY COALESCE(due_sort, "") ASC, priority DESC')
+    if user:
+        cur.execute('SELECT * FROM tasks WHERE user = ? ORDER BY COALESCE(due_sort, "") ASC, priority DESC', (user,))
+    else:
+        cur.execute('SELECT * FROM tasks ORDER BY COALESCE(due_sort, "") ASC, priority DESC')
     rows = cur.fetchall()
     tasks = []
     for r in rows:
@@ -100,7 +109,8 @@ def load_all_tasks():
             'due': r['due'] or '',
             'due_sort': r['due_sort'] or '',
             'status': r['status'] or 'todo',
-            'completed_at': r['completed_at'] or ''
+            'completed_at': r['completed_at'] or '',
+            'user': r['user'] if 'user' in r.keys() else None
         })
     conn.close()
     return tasks
@@ -110,7 +120,12 @@ def load_all_tasks():
 def index():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT status, COUNT(*) as cnt FROM tasks GROUP BY status")
+    # Show stats only for the logged-in user
+    user = session.get('user')
+    if user:
+        cur.execute("SELECT status, COUNT(*) as cnt FROM tasks WHERE user = ? GROUP BY status", (user,))
+    else:
+        cur.execute("SELECT status, COUNT(*) as cnt FROM tasks GROUP BY status")
     rows = cur.fetchall()
     stats = {r['status']: r['cnt'] for r in rows}
     today_tasks = stats.get('todo', 0)
@@ -128,7 +143,8 @@ def index():
 
 @app.route('/tasks')
 def tasks():
-    tasks = load_all_tasks()
+    user = session.get('user')
+    tasks = load_all_tasks(user=user)
     return render_template('tasks.html', user_name=session.get('user', 'Arnis'), tasks=tasks)
 
 
@@ -146,11 +162,12 @@ def add_task():
             due_display = dt.strftime('%d %B')
         except Exception:
             due_display = due_sort
+    user = session.get('user')
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(
-        'INSERT INTO tasks (project, title, description, priority, due, due_sort, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        (project, title, description, priority, due_display or due_sort, due_sort, 'todo')
+        'INSERT INTO tasks (project, title, description, priority, due, due_sort, status, user) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        (project, title, description, priority, due_display or due_sort, due_sort, 'todo', user)
     )
     conn.commit()
     conn.close()
@@ -170,19 +187,21 @@ def toggle_task():
         return jsonify({'error': 'missing id'}), 400
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute('SELECT status FROM tasks WHERE id = ?', (int(tid),))
+    user = session.get('user')
+    # ensure the task belongs to the current user (allow legacy NULL owner tasks)
+    cur.execute('SELECT status FROM tasks WHERE id = ? AND (user = ? OR user IS NULL)', (int(tid), user))
     row = cur.fetchone()
     if not row:
         conn.close()
-        return jsonify({'error': 'not found'}), 404
+        return jsonify({'error': 'not found or unauthorized'}), 404
     current = row['status']
     new_status = 'todo' if current == 'done' else 'done'
     # set or clear completed_at when status changes
     if new_status == 'done':
         completed_at = datetime.utcnow().date().isoformat()
-        cur.execute('UPDATE tasks SET status = ?, completed_at = ? WHERE id = ?', (new_status, completed_at, int(tid)))
+        cur.execute('UPDATE tasks SET status = ?, completed_at = ? WHERE id = ? AND (user = ? OR user IS NULL)', (new_status, completed_at, int(tid), user))
     else:
-        cur.execute('UPDATE tasks SET status = ?, completed_at = NULL WHERE id = ?', (new_status, int(tid)))
+        cur.execute('UPDATE tasks SET status = ?, completed_at = NULL WHERE id = ? AND (user = ? OR user IS NULL)', (new_status, int(tid), user))
     conn.commit()
     conn.close()
     return jsonify({'id': int(tid), 'status': new_status})
