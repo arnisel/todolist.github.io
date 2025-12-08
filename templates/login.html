@@ -67,9 +67,9 @@
 <label class="flex flex-col min-w-40 flex-1">
 <p class="text-gray-700 dark:text-gray-300 text-sm font-medium leading-normal pb-2">Şifre</p>
 <div class="flex w-full flex-1 items-stretch">
-<input name="password" class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-l-lg text-gray-900 dark:text-white focus:outline-0 border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 focus:border-primary focus:ring-2 focus:ring-primary/20 h-12 placeholder:text-gray-400 dark:placeholder:text-gray-500 p-[15px] border-r-0 pr-2 text-base font-normal leading-normal" placeholder="Şifrenizi girin" type="password" value=""/>
+<input id="loginPassword" name="password" class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-l-lg text-gray-900 dark:text-white focus:outline-0 border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 focus:border-primary focus:ring-2 focus:ring-primary/20 h-12 placeholder:text-gray-400 dark:placeholder:text-gray-500 p-[15px] border-r-0 pr-2 text-base font-normal leading-normal" placeholder="Şifrenizi girin" type="password" value=""/>
 <div class="text-gray-400 dark:text-gray-500 flex border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 items-center justify-center px-3 rounded-r-lg border-l-0">
-<span class="material-symbols-outlined text-xl" data-icon="Eye">visibility</span>
+<span id="loginToggle" class="material-symbols-outlined text-xl" style="cursor:pointer">visibility</span>
 </div>
 </div>
 </label>
@@ -92,4 +92,20 @@
 </div>
 </div>
 </div>
+<script>
+  (function(){
+    const toggle = document.getElementById('loginToggle');
+    const input = document.getElementById('loginPassword');
+    if(!toggle || !input) return;
+    toggle.addEventListener('click', function(){
+      if(input.type === 'password'){
+        input.type = 'text';
+        toggle.textContent = 'visibility_off';
+      } else {
+        input.type = 'password';
+        toggle.textContent = 'visibility';
+      }
+    });
+  })();
+</script>
 </body></html>

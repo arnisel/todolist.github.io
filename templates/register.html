@@ -79,7 +79,7 @@
 <div class="relative flex w-full items-stretch">
 <input id="password" name="password" class="form-input w-full rounded-lg border border-border-light dark:border-border-dark bg-input-bg-light dark:bg-input-bg-dark text-text-light dark:text-text-dark placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-primary focus:ring-primary h-12 pl-4 pr-10 text-sm font-normal" placeholder="Şifrenizi oluşturun" type="password"/>
 <div class="absolute inset-y-0 right-0 flex cursor-pointer items-center pr-3 text-gray-400 dark:text-gray-500 hover:text-primary">
-<span class="material-symbols-outlined">visibility</span>
+<span id="registerToggle" class="material-symbols-outlined" style="cursor:pointer">visibility</span>
 </div>
 </div>
 <p class="text-xs text-gray-500 dark:text-gray-400 pt-2">En az 8 karakter, bir büyük harf ve bir rakam içermelidir.</p>
@@ -87,9 +87,9 @@
 <label class="flex flex-col">
 <p class="text-sm font-medium leading-normal pb-2">Şifreyi Onayla</p>
 <div class="relative flex w-full items-stretch">
-<input name="password_confirm" class="form-input w-full rounded-lg border border-border-light dark:border-border-dark bg-input-bg-light dark:bg-input-bg-dark text-text-light dark:text-text-dark placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-primary focus:ring-primary h-12 pl-4 pr-10 text-sm font-normal" placeholder="Şifrenizi tekrar girin" type="password"/>
+<input id="password_confirm" name="password_confirm" class="form-input w-full rounded-lg border border-border-light dark:border-border-dark bg-input-bg-light dark:bg-input-bg-dark text-text-light dark:text-text-dark placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-primary focus:ring-primary h-12 pl-4 pr-10 text-sm font-normal" placeholder="Şifrenizi tekrar girin" type="password"/>
 <div class="absolute inset-y-0 right-0 flex cursor-pointer items-center pr-3 text-gray-400 dark:text-gray-500 hover:text-primary">
-<span class="material-symbols-outlined">visibility_off</span>
+<span id="registerToggleConfirm" class="material-symbols-outlined" style="cursor:pointer">visibility_off</span>
 </div>
 </div>
 </label>
@@ -147,6 +147,38 @@
         pwd.addEventListener('input', update);
         // initialize
         update();
+
+        // show/hide toggles for password fields
+        (function(){
+            const t1 = document.getElementById('registerToggle');
+            const p1 = document.getElementById('password');
+            const t2 = document.getElementById('registerToggleConfirm');
+            const p2 = document.getElementById('password_confirm');
+            if(t1 && p1){
+                t1.addEventListener('click', function(){
+                    if(p1.type === 'password'){
+                        p1.type = 'text';
+                        t1.textContent = 'visibility_off';
+                    } else {
+                        p1.type = 'password';
+                        t1.textContent = 'visibility';
+                    }
+                });
+            }
+            if(t2 && p2){
+                t2.addEventListener('click', function(){
+                    if(p2.type === 'password'){
+                        p2.type = 'text';
+                        t2.textContent = 'visibility_off';
+                    } else {
+                        p2.type = 'password';
+                        t2.textContent = 'visibility_off' === t2.textContent ? 'visibility' : 'visibility';
+                        // normalize to 'visibility' when hidden
+                        t2.textContent = (p2.type === 'password') ? 'visibility' : 'visibility_off';
+                    }
+                });
+            }
+        })();
     })();
 </script>
 </body></html>
