@@ -2,6 +2,7 @@ from datetime import datetime
 import sqlite3
 import os
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from werkzeug.security import generate_password_hash, check_password_hash
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'data.db')
@@ -40,6 +41,19 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL UNIQUE,
             description TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+        '''
+    )
+    # users table for authentication
+    cur.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL,
+            first_name TEXT,
+            last_name TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
         '''
@@ -475,20 +489,40 @@ def require_login():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # Demo login: set session and redirect to home (or next)
+    # Login using stored users in the database
     if session.get('user'):
         return redirect(url_for('index'))
 
+    error = None
     if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        if email:
-            session['user'] = email
-            next_url = request.args.get('next') or url_for('index')
-            return redirect(next_url)
-        return render_template('login.html')
+        email = (request.form.get('email') or '').strip().lower()
+        password = request.form.get('password') or ''
+        if not email or not password:
+            error = 'E-posta ve şifre girin.'
+        else:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute('SELECT id, password_hash, first_name FROM users WHERE email = ?', (email,))
+            row = cur.fetchone()
+            conn.close()
+            if not row:
+                error = 'Kayıt bulunamadı. Lütfen önce kayıt olun.'
+            else:
+                pw_hash = row['password_hash']
+                if check_password_hash(pw_hash, password):
+                    # successful login
+                    session['user'] = email
+                    # optionally store display name
+                    try:
+                        session['display_name'] = row['first_name'] or email
+                    except Exception:
+                        session['display_name'] = email
+                    next_url = request.args.get('next') or url_for('index')
+                    return redirect(next_url)
+                else:
+                    error = 'E-posta veya şifre hatalı.'
 
-    return render_template('login.html')
+    return render_template('login.html', error=error)
 
 
 @app.route('/logout')
@@ -502,16 +536,34 @@ def register():
     if session.get('user'):
         return redirect(url_for('index'))
 
+    error = None
     if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        password_confirm = request.form.get('password_confirm')
-        if email and password and password == password_confirm:
+        email = (request.form.get('email') or '').strip().lower()
+        password = request.form.get('password') or ''
+        password_confirm = request.form.get('password_confirm') or ''
+        first_name = (request.form.get('first_name') or '').strip()
+        last_name = (request.form.get('last_name') or '').strip()
+        if not email or not password:
+            error = 'E-posta ve şifre gereklidir.'
+        elif password != password_confirm:
+            error = 'Şifreler eşleşmiyor.'
+        else:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute('SELECT id FROM users WHERE email = ?', (email,))
+            if cur.fetchone():
+                # already registered
+                conn.close()
+                return redirect(url_for('login'))
+            pw_hash = generate_password_hash(password)
+            cur.execute('INSERT INTO users (email, password_hash, first_name, last_name) VALUES (?, ?, ?, ?)', (email, pw_hash, first_name, last_name))
+            conn.commit()
+            conn.close()
             session['user'] = email
+            session['display_name'] = first_name or email
             return redirect(url_for('index'))
-        return render_template('register.html')
 
-    return render_template('register.html')
+    return render_template('register.html', error=error)
 
 
 if __name__ == '__main__':
