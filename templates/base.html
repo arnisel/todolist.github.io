@@ -44,8 +44,13 @@
        These ensure the mobile hamburger and sidebar show/hide behavior works even if
        Tailwind's utility classes are not present (silences layout breakage/warning). */
     .hidden { display: none !important; }
+    /* By default mobile-topbar hidden and desktop sidebar visible on larger screens.
+       Use media queries below to switch between mobile and desktop behaviors. */
     .mobile-topbar { display: none; }
     .desktop-sidebar { display: flex; }
+
+    /* Ensure content has top padding on small screens to avoid being covered by the topbar */
+    main { padding-top: 0; }
 
     @media (max-width: 767px) {
       .desktop-sidebar { display: none !important; }
@@ -55,6 +60,7 @@
     @media (min-width: 768px) {
       .mobile-topbar { display: none !important; }
       .desktop-sidebar { display: flex !important; }
+      main { padding-top: 0; }
     }
     /* Desktop sidebar collapsed state */
     .sidebar-collapsed .desktop-sidebar { width: 72px !important; }
@@ -167,13 +173,46 @@
 
       // Sidebar collapse toggle for desktop responsiveness
       const sidebarToggle = document.getElementById('sidebarCollapseBtn');
-      function setSidebarCollapsed(val){ if(val) document.documentElement.classList.add('sidebar-collapsed'); else document.documentElement.classList.remove('sidebar-collapsed'); try{ localStorage.setItem('sidebarCollapsed', val ? '1' : '0'); }catch(e){} }
-      // init from storage or auto-collapse on narrow desktop
-      try{ if(localStorage.getItem('sidebarCollapsed') === '1') setSidebarCollapsed(true); }catch(e){}
+      // set sidebar collapsed state; if persist===false do not write to localStorage
+      function setSidebarCollapsed(val, persist = true){
+        if(val) document.documentElement.classList.add('sidebar-collapsed'); else document.documentElement.classList.remove('sidebar-collapsed');
+        try{ if(persist) localStorage.setItem('sidebarCollapsed', val ? '1' : '0'); }catch(e){}
+      }
+      // init from storage (user preference wins). Default to expanded to avoid
+      // showing a collapsed sidebar on first load in desktop. Also ensure we
+      // re-evaluate after page load to handle any CSS/render timing issues.
+      try{
+        const stored = localStorage.getItem('sidebarCollapsed');
+        if(stored === '1') setSidebarCollapsed(true, true);
+        else setSidebarCollapsed(false, false);
+      }catch(e){}
       if(sidebarToggle) sidebarToggle.addEventListener('click', ()=>{ const collapsed = document.documentElement.classList.toggle('sidebar-collapsed'); try{ localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0'); }catch(e){} });
-      // Auto-collapse when window width is small desktop (<= 1100px)
-      function autoCollapse(){ if(window.innerWidth <= 1100) setSidebarCollapsed(true); else { try{ if(localStorage.getItem('sidebarCollapsed') === null) setSidebarCollapsed(false); }catch(e){} }}
+      // Auto-collapse when window width is small desktop (<= 1100px).
+      // Use sessionStorage flag to remember if collapse was applied automatically so
+      // we can restore previous (expanded) desktop state when the window is widened again.
+      function autoCollapse(){
+        try{
+          const autoFlag = sessionStorage.getItem('sidebarAutoCollapsed');
+          if(window.innerWidth <= 1100){
+            // apply auto-collapse but don't overwrite user's stored preference
+            setSidebarCollapsed(true, false);
+            sessionStorage.setItem('sidebarAutoCollapsed', '1');
+          } else {
+            // if we previously auto-collapsed due to narrow width, restore expanded
+            if(autoFlag === '1'){
+              setSidebarCollapsed(false, false);
+              sessionStorage.removeItem('sidebarAutoCollapsed');
+            } else {
+              // otherwise respect user's explicit stored preference (already applied on init)
+            }
+          }
+        }catch(e){}
+      }
       window.addEventListener('resize', autoCollapse);
+      // run autoCollapse after DOM load and on window load to ensure correct
+      // desktop initial state even if CSS or layout measurements changed.
+      window.addEventListener('DOMContentLoaded', autoCollapse);
+      window.addEventListener('load', autoCollapse);
       autoCollapse();
 
       // Also keep delegated listener for robustness and to close dropdown on outside click
@@ -251,7 +290,7 @@
   </style>
 </head>
 <body class="font-display bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
-  <div class="flex h-screen w-full">
+  <div class="flex flex-col md:flex-row h-screen w-full">
     <!-- SideNavBar (hidden on small screens) -->
     <aside class="desktop-sidebar hidden md:flex w-64 flex-col justify-between bg-card-light dark:bg-card-dark p-6 transition-colors duration-300">
       <div class="flex flex-col gap-8">
