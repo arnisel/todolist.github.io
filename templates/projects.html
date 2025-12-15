@@ -9,7 +9,7 @@
       <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-gray-200/10 dark:border-white/10 px-4 sm:px-6 md:px-10 py-3">
         <div class="flex items-center gap-4 text-black dark:text-white">
           <div class="text-primary size-6">
-            <span class="material-symbols-outlined text-3xl">task_alt</span>
+            <span class="icon" aria-hidden="true">✓</span>
           </div>
           <h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">Görev Yöneticisi</h2>
         </div>
@@ -21,10 +21,10 @@
         <p class="text-black dark:text-white text-4xl font-black leading-tight tracking-[-0.033em] min-w-[18rem]">Projelerim</p>
         <div class="flex items-center gap-3">
           <button class="js-toggle-color flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 w-10 bg-gray-200/50 dark:bg-white/10 text-black dark:text-white text-sm font-bold leading-normal tracking-[0.015em]">
-            <span class="material-symbols-outlined">dark_mode</span>
+            <span class="icon" aria-hidden="true">🌙</span>
           </button>
           <button type="button" class="js-open-new-project flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-black text-sm font-bold leading-normal tracking-[0.015em] gap-2 hover:opacity-90 transition-opacity">
-            <span class="material-symbols-outlined text-lg">add</span>
+            <span class="icon" aria-hidden="true">➕</span>
             <span class="truncate">Yeni Proje Oluştur</span>
           </button>
         </div>
@@ -35,7 +35,7 @@
         <label class="flex flex-col min-w-40 h-12 w-full">
           <div class="flex w-full flex-1 items-stretch rounded-lg h-full">
             <div class="text-gray-500 dark:text-gray-400 flex border-none bg-gray-100 dark:bg-black/20 items-center justify-center pl-4 rounded-l-lg border-r-0">
-              <span class="material-symbols-outlined">search</span>
+              <span class="icon" aria-hidden="true">🔍</span>
             </div>
             <input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg text-black dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border-none bg-gray-100 dark:bg-black/20 h-full placeholder:text-gray-500 dark:placeholder:text-gray-400 pl-2 text-base font-normal leading-normal" placeholder="Projelerde ara..." value=""/>
           </div>
@@ -49,7 +49,7 @@
           <div class="flex items-start justify-between">
             <p class="text-black dark:text-white text-lg font-bold leading-normal">{{ p.name }}</p>
             <button class="js-delete-project ml-2 h-8 w-8 flex items-center justify-center rounded-lg border border-subtle-light dark:border-subtle-dark hover:bg-subtle-light/60 dark:hover:bg-subtle-dark text-red-600" data-id="{{ p.id if p.id is defined else '' }}" data-name="{{ p.name }}" title="Projeyi Sil">
-              <span class="material-symbols-outlined">delete</span>
+              <span class="icon" aria-hidden="true">🗑️</span>
             </button>
           </div>
           <p class="text-gray-600 dark:text-gray-300 text-sm font-normal leading-normal">{{ p.task_count }} Görev</p>
@@ -67,13 +67,13 @@
       {% if projects|length == 0 %}
       <div class="flex flex-col p-4 mt-8">
         <div class="flex flex-col items-center gap-6 rounded-xl border-2 border-dashed border-gray-300 dark:border-white/20 px-6 py-14 text-center">
-          <span class="material-symbols-outlined text-5xl text-gray-400 dark:text-gray-500">folder_off</span>
+          <span class="icon" aria-hidden="true">folder_off</span>
           <div class="flex max-w-[480px] flex-col items-center gap-2">
             <p class="text-black dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">Henüz projeniz yok</p>
             <p class="text-gray-600 dark:text-gray-300 text-sm font-normal leading-normal">İlk projenizi oluşturarak görevlerinizi yönetmeye başlayın!</p>
           </div>
           <button type="button" class="js-open-new-project flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-black text-sm font-bold leading-normal tracking-[0.015em] gap-2 hover:opacity-90 transition-opacity">
-            <span class="material-symbols-outlined text-lg">add</span>
+            <span class="icon" aria-hidden="true">➕</span>
             <span class="truncate">İlk Projeni Oluştur</span>
           </button>
         </div>
