@@ -19,8 +19,24 @@
     </div>
   </div>
 
-  <!-- Placeholder for Task List or other content -->
-  <div class="mt-12 flex h-96 items-center justify-center rounded-lg border-2 border-dashed border-border-light dark:border-border-dark">
-    <p class="text-text-muted-light dark:text-text-muted-dark">Gelecek içerik alanı</p>
+  <!-- Upcoming content: show static images from /static side-by-side -->
+  <div class="mt-12">
+    <div class="rounded-lg border border-border-light dark:border-border-dark p-6 bg-white dark:bg-card-dark">
+      <p class="text-text-muted-light dark:text-text-muted-dark mb-4">İlham Panosu</p>
+      <div class="grid grid-cols-2 gap-4">
+        <figure class="w-full p-2 bg-background-light dark:bg-card-dark rounded-lg shadow-sm border border-transparent overflow-hidden group transform transition duration-300 hover:-translate-y-1 hover:shadow-lg">
+          <img src="{{ url_for('static', filename='M1.jpeg') }}" alt="Görsel 1" class="w-full h-44 object-cover rounded-md transition-transform duration-300 group-hover:scale-105" />
+        </figure>
+        <figure class="w-full p-2 bg-background-light dark:bg-card-dark rounded-lg shadow-sm border border-transparent overflow-hidden group transform transition duration-300 hover:-translate-y-1 hover:shadow-lg">
+          <img src="{{ url_for('static', filename='M2.jpeg') }}" alt="Görsel 2" class="w-full h-44 object-cover rounded-md transition-transform duration-300 group-hover:scale-105" />
+        </figure>
+        <figure class="w-full p-2 bg-background-light dark:bg-card-dark rounded-lg shadow-sm border border-transparent overflow-hidden group transform transition duration-300 hover:-translate-y-1 hover:shadow-lg">
+          <img src="{{ url_for('static', filename='M3.jpeg') }}" alt="Görsel 3" class="w-full h-44 object-cover rounded-md transition-transform duration-300 group-hover:scale-105" />
+        </figure>
+        <figure class="w-full p-2 bg-background-light dark:bg-card-dark rounded-lg shadow-sm border border-transparent overflow-hidden group transform transition duration-300 hover:-translate-y-1 hover:shadow-lg">
+          <img src="{{ url_for('static', filename='M4.jpeg') }}" alt="Görsel 4" class="w-full h-44 object-cover rounded-md transition-transform duration-300 group-hover:scale-105" />
+        </figure>
+      </div>
+    </div>
   </div>
 {% endblock %}
