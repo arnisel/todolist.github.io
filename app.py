@@ -168,7 +168,9 @@ def add_task():
     if due_sort:
         try:
             dt = datetime.strptime(due_sort, '%Y-%m-%d')
-            due_display = dt.strftime('%d %B')
+            # format month names in Turkish
+            months_tr = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık']
+            due_display = f"{dt.day} {months_tr[dt.month - 1]}"
         except Exception:
             due_display = due_sort
     user = session.get('user')
