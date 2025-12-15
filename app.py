@@ -278,6 +278,12 @@ def projects():
     return render_template('projects.html', user_name=session.get('user', 'Arnis'), projects=projects_list)
 
 
+# Simple health check endpoint for uptime checks
+@app.route('/health')
+def health():
+    return jsonify({'status': 'ok'}), 200
+
+
 @app.route('/add_project', methods=['POST'])
 def add_project():
     # Persist project in SQLite for current user
