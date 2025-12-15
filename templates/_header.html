@@ -1,6 +1,6 @@
 <!-- Header include: shows page heading and quick action button -->
 <div class="flex flex-wrap items-center justify-between gap-4 border-b border-border-light dark:border-border-dark pb-8 mb-8">
-  <div class="flex min-w-72 flex-col">
+  <div class="flex min-w-[18rem] flex-col">
       <div class="flex items-center gap-4">
         <a href="{{ url_for('index') }}" class="flex items-center gap-4 no-underline">
           <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="Logo" class="site-logo" />
@@ -16,3 +16,39 @@
     <span class="truncate">Hızlı Görev Ekle</span>
   </button>
 </div>
+
+<script>
+(function () {
+  const html = document.documentElement;
+  const STORAGE_KEY = 'prefers-dark';
+
+  function applyTheme(isDark) {
+    html.classList.toggle('dark', isDark);
+    try {
+      localStorage.setItem(STORAGE_KEY, isDark ? '1' : '0');
+    } catch (e) {}
+  }
+
+  // Sayfa ilk yüklenirken
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved === '1') {
+      html.classList.add('dark');
+    } else if (saved === null) {
+      // İlk kez gelen kullanıcı → sistem temasını kullan
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      applyTheme(prefersDark);
+    }
+  } catch (e) {}
+
+  // GLOBAL toggle (her sayfada çalışır)
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.js-toggle-color');
+    if (!btn) return;
+
+    const isDark = !html.classList.contains('dark');
+    applyTheme(isDark);
+  });
+})();
+</script>
+

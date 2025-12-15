@@ -1,261 +1,264 @@
-{% extends 'base.html' %}
+  {% extends 'base.html' %}
 
-{% block title %}Görevler - Görev Yöneticisi{% endblock %}
+  {% block title %}Görevler - Görev Yöneticisi{% endblock %}
 
-{% block page_header %}
-<!-- TopNavBar (overrides default header) -->
-<header class="flex items-center justify-between whitespace-nowrap border-b border-subtle-light dark:border-subtle-dark/50 px-6 py-4">
-  <div class="flex items-center gap-8">
-    <div class="flex items-center gap-3 text-text-light dark:text-text-dark">
-      <span class="material-symbols-outlined text-primary text-3xl">task_alt</span>
-      <h2 class="text-xl font-bold">Görev Yöneticisi</h2>
+  {% block page_header %}
+  <!-- TopNavBar (overrides default header) -->
+  <header class="flex flex-wrap items-center justify-between border-b border-subtle-light dark:border-subtle-dark/50 px-4 md:px-6 py-4">
+    <div class="flex items-center gap-4 min-w-0">
+      <div class="flex items-center gap-3 text-text-light dark:text-text-dark shrink-0">
+        <span class="material-symbols-outlined text-primary text-3xl">task_alt</span>
+      </div>
+      <div class="min-w-0">
+        <h2 class="text-xl md:text-2xl font-bold truncate">Görev Yöneticisi</h2>
+        <div class="text-sm text-text-subtle-light dark:text-text-subtle-dark hidden md:block">Gösterge Paneli</div>
+      </div>
     </div>
-    <div class="hidden md:flex relative items-center">
-      <span class="material-symbols-outlined absolute left-3 text-text-subtle-light dark:text-text-subtle-dark">search</span>
-      <input id="tasksSearch" class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg bg-subtle-light/60 dark:bg-card-dark text-text-light dark:text-text-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border-transparent h-10 placeholder:text-text-subtle-light dark:placeholder:text-text-subtle-dark pl-10 pr-4 text-sm font-normal" placeholder="Görevlerde ara..." value=""/>
+    <div class="flex items-center gap-3 mt-3 md:mt-0">
+      <div class="hidden md:flex relative items-center">
+        <span class="material-symbols-outlined absolute left-3 text-text-subtle-light dark:text-text-subtle-dark">search</span>
+        <input id="tasksSearch" class="form-input flex w-64 min-w-0 resize-none overflow-hidden rounded-lg bg-subtle-light/60 dark:bg-card-dark text-text-light dark:text-text-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border-transparent h-10 placeholder:text-text-subtle-light dark:placeholder:text-text-subtle-dark pl-10 pr-4 text-sm font-normal" placeholder="Görevlerde ara..." value=""/>
+      </div>
+      <a href="{{ url_for('index') }}" class="text-sm underline hidden sm:inline">Gösterge Paneli</a>
+      <a href="{{ url_for('tasks') }}" class="text-sm font-bold hidden sm:inline">Görevler</a>
+      <button class="js-open-new-task flex items-center justify-center overflow-hidden rounded-lg h-10 bg-primary text-card-light gap-2 text-sm font-bold min-w-0 px-3">
+        <span class="material-symbols-outlined text-base">add</span>
+        <span class="hidden sm:inline">Yeni Görev Ekle</span>
+      </button>
+      <button class="js-toggle-color flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 w-10 bg-subtle-light/60 dark:bg-card-dark text-text-light dark:text-text-dark">
+        <span class="material-symbols-outlined">dark_mode</span>
+      </button>
     </div>
-  </div>
-  <div class="flex items-center gap-4">
-    <a href="{{ url_for('index') }}" class="text-sm underline">Gösterge Paneli</a>
-    <a href="{{ url_for('tasks') }}" class="text-sm font-bold">Görevler</a>
-    <button class="js-open-new-task flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 bg-primary text-card-light gap-2 text-sm font-bold min-w-0 px-4">
-      <span class="material-symbols-outlined text-base">add</span>
-      <span>Yeni Görev Ekle</span>
-    </button>
-    <button class="js-toggle-color flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 w-10 bg-subtle-light/60 dark:bg-card-dark text-text-light dark:text-text-dark">
-      <span class="material-symbols-outlined">dark_mode</span>
-    </button>
-  </div>
-</header>
-{% endblock %}
+  </header>
+  {% endblock %}
 
-{% block scripts %}
-<script>
-;(function(){
-  const filterBtn = document.getElementById('filterBtn');
-  const filterPanel = document.getElementById('filterPanel');
-  const sortBtn = document.getElementById('sortBtn');
-  const sortPanel = document.getElementById('sortPanel');
-  const filterCheckboxes = Array.from(document.querySelectorAll('.filter-checkbox')) || [];
-  const statusChips = Array.from(document.querySelectorAll('.status-chip')) || [];
-  const sortOptions = Array.from(document.querySelectorAll('.sort-option')) || [];
-  const tasksGrid = document.getElementById('tasksGrid');
-  const cardsSelector = '.task-card';
+  {% block scripts %}
+  <script>
+  ;(function(){
+    const filterBtn = document.getElementById('filterBtn');
+    const filterPanel = document.getElementById('filterPanel');
+    const sortBtn = document.getElementById('sortBtn');
+    const sortPanel = document.getElementById('sortPanel');
+    const filterCheckboxes = Array.from(document.querySelectorAll('.filter-checkbox')) || [];
+    const statusChips = Array.from(document.querySelectorAll('.status-chip')) || [];
+    const sortOptions = Array.from(document.querySelectorAll('.sort-option')) || [];
+    const tasksGrid = document.getElementById('tasksGrid');
+    const cardsSelector = '.task-card';
 
-  if(!tasksGrid) return; // nothing to do
+    if(!tasksGrid) return; // nothing to do
 
-  // safe handlers
-  function safeAdd(el, ev, fn){ if(el && typeof el.addEventListener === 'function') el.addEventListener(ev, fn); }
+    // safe handlers
+    function safeAdd(el, ev, fn){ if(el && typeof el.addEventListener === 'function') el.addEventListener(ev, fn); }
 
-  safeAdd(filterBtn, 'click', ()=>{ if(filterPanel) filterPanel.classList.toggle('hidden'); if(sortPanel) sortPanel.classList.add('hidden'); });
-  safeAdd(sortBtn, 'click', ()=>{ if(sortPanel) sortPanel.classList.toggle('hidden'); if(filterPanel) filterPanel.classList.add('hidden'); });
+    safeAdd(filterBtn, 'click', ()=>{ if(filterPanel) filterPanel.classList.toggle('hidden'); if(sortPanel) sortPanel.classList.add('hidden'); });
+    safeAdd(sortBtn, 'click', ()=>{ if(sortPanel) sortPanel.classList.toggle('hidden'); if(filterPanel) filterPanel.classList.add('hidden'); });
 
-  filterCheckboxes.forEach(cb=> safeAdd(cb,'change', applyFiltersAndSort));
+    filterCheckboxes.forEach(cb=> safeAdd(cb,'change', applyFiltersAndSort));
 
-  statusChips.forEach(chip=>{
-    safeAdd(chip,'click', ()=>{
-      const status = chip.dataset.status;
-      const active = chip.classList.toggle('bg-primary/20');
-      chip.classList.toggle('text-primary', active);
-      filterCheckboxes.forEach(cb=>{ cb.checked = (cb.value === status) ? active : false; });
-      applyFiltersAndSort();
-    });
-  });
-
-  sortOptions.forEach(opt=> safeAdd(opt,'click', (e)=>{
-    currentSort = e.currentTarget.dataset.sort;
-    if(sortPanel) sortPanel.classList.add('hidden');
-    applyFiltersAndSort();
-  }));
-
-  let currentSort = null;
-
-  function applyFiltersAndSort(){
-    const activeStatuses = filterCheckboxes.filter(cb=>cb.checked).map(cb=>cb.value);
-    const cards = Array.from(document.querySelectorAll(cardsSelector));
-    cards.forEach(card=>{
-      const status = card.dataset.status;
-      const show = activeStatuses.length === 0 || activeStatuses.includes(status);
-      card.style.display = show ? '' : 'none';
-    });
-    if(currentSort) sortCards(currentSort);
-  }
-
-  function sortCards(mode){
-    const cards = Array.from(document.querySelectorAll(cardsSelector)).filter(c=>c.style.display !== 'none');
-    let sorted = cards.slice();
-    if(mode === 'priority'){
-      const order = { 'high': 0, 'medium': 1, 'low': 2 };
-      sorted.sort((a,b)=> order[a.dataset.priority] - order[b.dataset.priority]);
-    } else if(mode === 'due'){
-      sorted.sort((a,b)=> (a.dataset.due || '') > (b.dataset.due || '') ? 1 : -1);
-    }
-    sorted.forEach(node=> tasksGrid.appendChild(node));
-  }
-
-  document.addEventListener('click', (e)=>{
-    if(filterPanel && filterBtn && !filterPanel.contains(e.target) && !filterBtn.contains(e.target)) filterPanel.classList.add('hidden');
-    if(sortPanel && sortBtn && !sortPanel.contains(e.target) && !sortBtn.contains(e.target)) sortPanel.classList.add('hidden');
-  });
-
-  // initial
-  applyFiltersAndSort();
-
-  // Search: filter task cards by title, description or project
-  (function(){
-    const searchInput = document.getElementById('tasksSearch');
-    if(!searchInput) return;
-    function doSearch(){
-      const q = (searchInput.value || '').trim().toLowerCase();
-      const cards = Array.from(document.querySelectorAll(cardsSelector));
-      if(!q){
-        cards.forEach(c=> c.style.display = '');
+    statusChips.forEach(chip=>{
+      safeAdd(chip,'click', ()=>{
+        const status = chip.dataset.status;
+        const active = chip.classList.toggle('bg-primary/20');
+        chip.classList.toggle('text-primary', active);
+        filterCheckboxes.forEach(cb=>{ cb.checked = (cb.value === status) ? active : false; });
         applyFiltersAndSort();
-        return;
-      }
-      cards.forEach(c=>{
-        const title = (c.querySelector('p.text-lg') && c.querySelector('p.text-lg').textContent) || '';
-        const desc = (c.querySelector('p.mb-4') && c.querySelector('p.mb-4').textContent) || '';
-        const proj = (c.querySelector('p.text-sm') && c.querySelector('p.text-sm').textContent) || '';
-        const hay = (title + ' ' + desc + ' ' + proj).toLowerCase();
-        c.style.display = hay.includes(q) ? '' : 'none';
       });
+    });
+
+    sortOptions.forEach(opt=> safeAdd(opt,'click', (e)=>{
+      currentSort = e.currentTarget.dataset.sort;
+      if(sortPanel) sortPanel.classList.add('hidden');
+      applyFiltersAndSort();
+    }));
+
+    let currentSort = null;
+
+    function applyFiltersAndSort(){
+      const activeStatuses = filterCheckboxes.filter(cb=>cb.checked).map(cb=>cb.value);
+      const cards = Array.from(document.querySelectorAll(cardsSelector));
+      cards.forEach(card=>{
+        const status = card.dataset.status;
+        const show = activeStatuses.length === 0 || activeStatuses.includes(status);
+        card.style.display = show ? '' : 'none';
+      });
+      if(currentSort) sortCards(currentSort);
     }
-    searchInput.addEventListener('input', doSearch);
-  })();
 
-  // toggle complete via API
-  const toggleButtons = Array.from(document.querySelectorAll('.js-toggle-check'));
-  toggleButtons.forEach(btn => safeAdd(btn, 'click', async (e) => {
-    const id = btn.dataset.id;
-    if(!id) return;
-    try{
-  const res = await fetch("{{ url_for('toggle_task') }}", {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: id })
-      });
-      const data = await res.json();
-      if(!res.ok){ console.error('toggle failed', data); return; }
-      // update UI
-      const card = document.querySelector(`.task-card[data-id="${id}"]`);
-      if(!card) return;
-      card.dataset.status = data.status;
-      const title = card.querySelector('p.text-lg');
-      const desc = card.querySelector('p.mb-4');
-      if(data.status === 'done'){
-        card.classList.add('opacity-60');
-        if(title) title.classList.add('line-through');
-        if(desc) desc.classList.add('line-through');
-        btn.classList.add('bg-primary/20');
-        btn.classList.add('text-primary');
-      } else {
-        card.classList.remove('opacity-60');
-        if(title) title.classList.remove('line-through');
-        if(desc) desc.classList.remove('line-through');
-        btn.classList.remove('bg-primary/20');
-        btn.classList.remove('text-primary');
+    function sortCards(mode){
+      const cards = Array.from(document.querySelectorAll(cardsSelector)).filter(c=>c.style.display !== 'none');
+      let sorted = cards.slice();
+      if(mode === 'priority'){
+        const order = { 'high': 0, 'medium': 1, 'low': 2 };
+        sorted.sort((a,b)=> order[a.dataset.priority] - order[b.dataset.priority]);
+      } else if(mode === 'due'){
+        sorted.sort((a,b)=> (a.dataset.due || '') > (b.dataset.due || '') ? 1 : -1);
       }
-    }catch(err){ console.error(err); }
-  }));
+      sorted.forEach(node=> tasksGrid.appendChild(node));
+    }
 
-    // delete task via API
-    const deleteButtons = Array.from(document.querySelectorAll('.js-delete-task'));
-    deleteButtons.forEach(btn => safeAdd(btn, 'click', async (e) => {
+    document.addEventListener('click', (e)=>{
+      if(filterPanel && filterBtn && !filterPanel.contains(e.target) && !filterBtn.contains(e.target)) filterPanel.classList.add('hidden');
+      if(sortPanel && sortBtn && !sortPanel.contains(e.target) && !sortBtn.contains(e.target)) sortPanel.classList.add('hidden');
+    });
+
+    // initial
+    applyFiltersAndSort();
+
+    // Search: filter task cards by title, description or project
+    (function(){
+      const searchInput = document.getElementById('tasksSearch');
+      if(!searchInput) return;
+      function doSearch(){
+        const q = (searchInput.value || '').trim().toLowerCase();
+        const cards = Array.from(document.querySelectorAll(cardsSelector));
+        if(!q){
+          cards.forEach(c=> c.style.display = '');
+          applyFiltersAndSort();
+          return;
+        }
+        cards.forEach(c=>{
+          const title = (c.querySelector('p.text-lg') && c.querySelector('p.text-lg').textContent) || '';
+          const desc = (c.querySelector('p.mb-4') && c.querySelector('p.mb-4').textContent) || '';
+          const proj = (c.querySelector('p.text-sm') && c.querySelector('p.text-sm').textContent) || '';
+          const hay = (title + ' ' + desc + ' ' + proj).toLowerCase();
+          c.style.display = hay.includes(q) ? '' : 'none';
+        });
+      }
+      searchInput.addEventListener('input', doSearch);
+    })();
+
+    // toggle complete via API
+    const toggleButtons = Array.from(document.querySelectorAll('.js-toggle-check'));
+    toggleButtons.forEach(btn => safeAdd(btn, 'click', async (e) => {
       const id = btn.dataset.id;
       if(!id) return;
-      if(!confirm('Bu görevi silmek istediğinize emin misiniz?')) return;
       try{
-        const res = await fetch("{{ url_for('delete_task') }}", {
+    const res = await fetch("{{ url_for('toggle_task') }}", {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: id })
         });
         const data = await res.json();
-        if(!res.ok){ console.error('delete failed', data); return; }
+        if(!res.ok){ console.error('toggle failed', data); return; }
+        // update UI
         const card = document.querySelector(`.task-card[data-id="${id}"]`);
-        if(card && card.parentNode) card.parentNode.removeChild(card);
+        if(!card) return;
+        card.dataset.status = data.status;
+        const title = card.querySelector('p.text-lg');
+        const desc = card.querySelector('p.mb-4');
+        if(data.status === 'done'){
+          card.classList.add('opacity-60');
+          if(title) title.classList.add('line-through');
+          if(desc) desc.classList.add('line-through');
+          btn.classList.add('bg-primary/20');
+          btn.classList.add('text-primary');
+        } else {
+          card.classList.remove('opacity-60');
+          if(title) title.classList.remove('line-through');
+          if(desc) desc.classList.remove('line-through');
+          btn.classList.remove('bg-primary/20');
+          btn.classList.remove('text-primary');
+        }
       }catch(err){ console.error(err); }
     }));
-})();
-</script>
-{% endblock %}
 
-{% block content %}
-  <!-- PageHeading -->
-  <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
-    <p class="text-4xl font-black tracking-tighter">Tüm Görevler</p>
-  </div>
+      // delete task via API
+      const deleteButtons = Array.from(document.querySelectorAll('.js-delete-task'));
+      deleteButtons.forEach(btn => safeAdd(btn, 'click', async (e) => {
+        const id = btn.dataset.id;
+        if(!id) return;
+        if(!confirm('Bu görevi silmek istediğinize emin misiniz?')) return;
+        try{
+          const res = await fetch("{{ url_for('delete_task') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id })
+          });
+          const data = await res.json();
+          if(!res.ok){ console.error('delete failed', data); return; }
+          const card = document.querySelector(`.task-card[data-id="${id}"]`);
+          if(card && card.parentNode) card.parentNode.removeChild(card);
+        }catch(err){ console.error(err); }
+      }));
+  })();
+  </script>
+  {% endblock %}
 
-  <!-- ToolBar & Chips -->
-  <div class="flex flex-col md:flex-row justify-between gap-4 mb-4">
-    <div class="flex flex-wrap items-center gap-3">
-      <div class="relative">
-        <button id="filterBtn" class="flex items-center gap-2 rounded-lg h-10 px-3 bg-subtle-light/60 dark:bg-card-dark text-sm font-medium">
-          <span class="material-symbols-outlined text-base">filter_list</span>
-          Filtrele
-        </button>
-        <!-- filter panel -->
-        <div id="filterPanel" class="hidden absolute left-0 mt-2 w-48 rounded-md bg-card-light dark:bg-card-dark border border-subtle-light/50 dark:border-subtle-dark/40 p-3 shadow-md z-50">
-          <label class="flex items-center gap-2"><input type="checkbox" value="todo" class="filter-checkbox"> Yapılacak</label>
-          <label class="flex items-center gap-2"><input type="checkbox" value="in_progress" class="filter-checkbox"> Devam Ediyor</label>
-          <label class="flex items-center gap-2"><input type="checkbox" value="done" class="filter-checkbox"> Tamamlandı</label>
-        </div>
-      </div>
-      <div class="relative">
-        <button id="sortBtn" class="flex items-center gap-2 rounded-lg h-10 px-3 bg-subtle-light/60 dark:bg-card-dark text-sm font-medium">
-          <span class="material-symbols-outlined text-base">swap_vert</span>
-          Sırala
-        </button>
-        <div id="sortPanel" class="hidden absolute left-0 mt-2 w-48 rounded-md bg-card-light dark:bg-card-dark border border-subtle-light/50 dark:border-subtle-dark/40 p-3 shadow-md z-50">
-          <button class="w-full text-left sort-option" data-sort="priority">Öncelik (Yüksek → Düşük)</button>
-          <button class="w-full text-left sort-option mt-2" data-sort="due">Son Teslim (Yakın → Uzak)</button>
-        </div>
-      </div>
-      <!-- quick status chips -->
-      <button class="hidden sm:inline-flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-primary/20 text-primary pl-4 pr-4 status-chip" data-status="todo">Yapılacak</button>
-      <button class="hidden sm:inline-flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-subtle-light/60 dark:bg-card-dark pl-4 pr-4 status-chip" data-status="in_progress">Devam Ediyor</button>
-      <button class="hidden sm:inline-flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-subtle-light/60 dark:bg-card-dark pl-4 pr-4 status-chip" data-status="done">Tamamlandı</button>
+  {% block content %}
+    <!-- PageHeading -->
+    <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+      <p class="text-4xl font-black tracking-tighter">Tüm Görevler</p>
     </div>
-    <div class="flex items-center gap-2">
-      <p class="text-sm text-text-subtle-light dark:text-text-subtle-dark hidden md:block">Görünüm:</p>
-      <button class="js-view-grid p-2 rounded-lg bg-primary/20 text-primary">
-        <span class="material-symbols-outlined">grid_view</span>
-      </button>
-      <button class="js-view-list p-2 rounded-lg bg-subtle-light/60 dark:bg-card-dark">
-        <span class="material-symbols-outlined">view_list</span>
-      </button>
-    </div>
-  </div>
 
-  <!-- Task Cards Grid -->
-  <div id="tasksGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {% for t in tasks %}
-  <div class="task-card flex flex-col rounded-xl bg-card-light dark:bg-card-dark p-4 sm:p-5 shadow-sm border border-subtle-light/50 dark:border-subtle-dark/40 transition-transform duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg hover:ring-1 hover:ring-primary/20 {% if t.status == 'done' %}opacity-60{% endif %}" data-id="{{ t.id }}" data-status="{{ t.status }}" data-priority="{{ t.priority }}" data-due="{{ t.due_sort }}">
-      <div class="flex justify-between items-start gap-3 mb-3">
-        <div class="flex flex-col">
-          <p class="text-xs sm:text-sm font-medium text-text-subtle-light dark:text-text-subtle-dark">{{ t.project }}</p>
-          <p class="text-base sm:text-lg font-bold {% if t.status == 'done' %}line-through{% endif %}">{{ t.title }}</p>
+    <!-- ToolBar & Chips -->
+    <div class="flex flex-col md:flex-row justify-between gap-4 mb-4">
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="relative">
+          <button id="filterBtn" class="flex items-center gap-2 rounded-lg h-10 px-3 bg-subtle-light/60 dark:bg-card-dark text-sm font-medium">
+            <span class="material-symbols-outlined text-base">filter_list</span>
+            Filtrele
+          </button>
+          <!-- filter panel -->
+          <div id="filterPanel" class="hidden absolute left-0 mt-2 w-48 rounded-md bg-card-light dark:bg-card-dark border border-subtle-light/50 dark:border-subtle-dark/40 p-3 shadow-md z-50">
+            <label class="flex items-center gap-2"><input type="checkbox" value="todo" class="filter-checkbox"> Yapılacak</label>
+            <label class="flex items-center gap-2"><input type="checkbox" value="in_progress" class="filter-checkbox"> Devam Ediyor</label>
+            <label class="flex items-center gap-2"><input type="checkbox" value="done" class="filter-checkbox"> Tamamlandı</label>
+          </div>
         </div>
-        <div class="flex items-center gap-2 shrink-0">
-          <span class="text-xs font-bold py-1 px-2.5 rounded-full {% if t.priority == 'high' %}bg-red-500/10 text-red-500{% elif t.priority == 'medium' %}bg-orange-500/10 text-orange-500{% else %}bg-green-500/10 text-green-500{% endif %}">{{ t.priority|capitalize }}</span>
-          <button class="js-delete-task h-8 w-8 flex items-center justify-center rounded-lg border border-subtle-light dark:border-subtle-dark hover:bg-subtle-light/60 dark:hover:bg-subtle-dark text-red-600" data-id="{{ t.id }}" title="Sil">
-            <span class="material-symbols-outlined">delete</span>
+        <div class="relative">
+          <button id="sortBtn" class="flex items-center gap-2 rounded-lg h-10 px-3 bg-subtle-light/60 dark:bg-card-dark text-sm font-medium">
+            <span class="material-symbols-outlined text-base">swap_vert</span>
+            Sırala
+          </button>
+          <div id="sortPanel" class="hidden absolute left-0 mt-2 w-48 rounded-md bg-card-light dark:bg-card-dark border border-subtle-light/50 dark:border-subtle-dark/40 p-3 shadow-md z-50">
+            <button class="w-full text-left sort-option" data-sort="priority">Öncelik (Yüksek → Düşük)</button>
+            <button class="w-full text-left sort-option mt-2" data-sort="due">Son Teslim (Yakın → Uzak)</button>
+          </div>
+        </div>
+        <!-- quick status chips -->
+        <button class="hidden sm:inline-flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-primary/20 text-primary pl-4 pr-4 status-chip" data-status="todo">Yapılacak</button>
+        <button class="hidden sm:inline-flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-subtle-light/60 dark:bg-card-dark pl-4 pr-4 status-chip" data-status="in_progress">Devam Ediyor</button>
+        <button class="hidden sm:inline-flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-subtle-light/60 dark:bg-card-dark pl-4 pr-4 status-chip" data-status="done">Tamamlandı</button>
+      </div>
+      <div class="flex items-center gap-2">
+        <p class="text-sm text-text-subtle-light dark:text-text-subtle-dark hidden md:block">Görünüm:</p>
+        <button class="js-view-grid p-2 rounded-lg bg-primary/20 text-primary">
+          <span class="material-symbols-outlined">grid_view</span>
+        </button>
+        <button class="js-view-list p-2 rounded-lg bg-subtle-light/60 dark:bg-card-dark">
+          <span class="material-symbols-outlined">view_list</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Task Cards Grid -->
+    <div id="tasksGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for t in tasks %}
+    <div class="task-card flex flex-col rounded-xl bg-card-light dark:bg-card-dark p-4 sm:p-5 shadow-sm border border-subtle-light/50 dark:border-subtle-dark/40 transition-transform duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg hover:ring-1 hover:ring-primary/20 {% if t.status == 'done' %}opacity-60{% endif %}" data-id="{{ t.id }}" data-status="{{ t.status }}" data-priority="{{ t.priority }}" data-due="{{ t.due_sort }}">
+        <div class="flex justify-between items-start gap-3 mb-3">
+          <div class="flex flex-col">
+            <p class="text-xs sm:text-sm font-medium text-text-subtle-light dark:text-text-subtle-dark">{{ t.project }}</p>
+            <p class="text-base sm:text-lg font-bold {% if t.status == 'done' %}line-through{% endif %}">{{ t.title }}</p>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <span class="text-xs font-bold py-1 px-2.5 rounded-full {% if t.priority == 'high' %}bg-red-500/10 text-red-500{% elif t.priority == 'medium' %}bg-orange-500/10 text-orange-500{% else %}bg-green-500/10 text-green-500{% endif %}">{{ t.priority|capitalize }}</span>
+            <button class="js-delete-task h-8 w-8 flex items-center justify-center rounded-lg border border-subtle-light dark:border-subtle-dark hover:bg-subtle-light/60 dark:hover:bg-subtle-dark text-red-600" data-id="{{ t.id }}" title="Sil">
+              <span class="material-symbols-outlined">delete</span>
+            </button>
+          </div>
+        </div>
+        <p class="text-sm sm:text-sm text-text-subtle-light dark:text-text-subtle-dark mb-4 {% if t.status == 'done' %}line-through{% endif %}">{{ t.description }}</p>
+        <div class="mt-auto flex justify-between items-center">
+          <div class="flex items-center gap-2 text-xs sm:text-sm text-text-subtle-light dark:text-text-subtle-dark {% if t.status == 'done' %}line-through{% endif %}">
+            <span class="material-symbols-outlined text-base">calendar_today</span>
+            <span>{{ t.due }}</span>
+          </div>
+          <button class="js-toggle-check h-8 w-8 flex items-center justify-center rounded-lg border border-subtle-light dark:border-subtle-dark hover:bg-subtle-light/60 dark:hover:bg-subtle-dark {% if t.status == 'done' %}bg-primary/20 text-primary{% endif %}" data-id="{{ t.id }}">
+            <span class="material-symbols-outlined text-lg">check</span>
           </button>
         </div>
       </div>
-      <p class="text-sm sm:text-sm text-text-subtle-light dark:text-text-subtle-dark mb-4 {% if t.status == 'done' %}line-through{% endif %}">{{ t.description }}</p>
-      <div class="mt-auto flex justify-between items-center">
-        <div class="flex items-center gap-2 text-xs sm:text-sm text-text-subtle-light dark:text-text-subtle-dark {% if t.status == 'done' %}line-through{% endif %}">
-          <span class="material-symbols-outlined text-base">calendar_today</span>
-          <span>{{ t.due }}</span>
-        </div>
-        <button class="js-toggle-check h-8 w-8 flex items-center justify-center rounded-lg border border-subtle-light dark:border-subtle-dark hover:bg-subtle-light/60 dark:hover:bg-subtle-dark {% if t.status == 'done' %}bg-primary/20 text-primary{% endif %}" data-id="{{ t.id }}">
-          <span class="material-symbols-outlined text-lg">check</span>
-        </button>
-      </div>
+      {% endfor %}
     </div>
-    {% endfor %}
-  </div>
-  
-{% endblock %}
+    
+  {% endblock %}

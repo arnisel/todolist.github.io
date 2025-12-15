@@ -77,6 +77,20 @@
       transform: translateY(-6px) scaleY(.98);
       pointer-events: none;
     }
+    /* Mobile full-width dropdown (appears below topbar and covers half viewport) */
+    @media (max-width: 767px) {
+      #mobileDropdownGlobal.dropdown-panel {
+        position: fixed !important;
+        left: 0 !important;
+        right: 0 !important;
+        top: 56px !important; /* adjust if topbar height differs */
+        height: 50vh !important;
+        min-width: unset !important;
+        width: 100% !important;
+        border-radius: 0 0 12px 12px !important;
+        overflow: auto !important;
+      }
+    }
     .dropdown-open{ opacity: 1; transform: translateY(0) scaleY(1); pointer-events: auto; }
     .dropdown-closing{ opacity: 0; transform: translateY(-6px) scaleY(.98); pointer-events: none; }
   </style>
@@ -117,13 +131,27 @@
           // hide off-canvas overlay if present and show compact dropdown
           if(mobileMenu) mobileMenu.classList.add('hidden');
           // position the global dropdown under the button
-          try{
-            const rect = (button && button.getBoundingClientRect && button.getBoundingClientRect()) || {left:8, bottom:48};
-            dropdown.style.left = Math.max(8, rect.left) + 'px';
-            dropdown.style.top = (rect.bottom + 8) + 'px';
-            dropdown.style.zIndex = '9999';
-            showDropdown(dropdown);
-          }catch(e){ dropdown.classList.remove('hidden'); }
+                try{
+                  // If using the global dropdown on small screens, position it as a fixed panel
+                  if(dropdown.id === 'mobileDropdownGlobal'){
+                    dropdown.style.left = '0';
+                    dropdown.style.right = '0';
+                    // try to compute top from the topbar height if available
+                    const topbar = document.querySelector('.mobile-topbar');
+                    const top = (topbar && topbar.getBoundingClientRect && topbar.getBoundingClientRect().bottom) || 56;
+                    dropdown.style.top = (top + 0) + 'px';
+                    dropdown.style.height = (window.innerHeight * 0.5) + 'px';
+                    dropdown.style.zIndex = '9999';
+                    dropdown.style.minWidth = '';
+                    showDropdown(dropdown);
+                  } else {
+                    const rect = (button && button.getBoundingClientRect && button.getBoundingClientRect()) || {left:8, bottom:48};
+                    dropdown.style.left = Math.max(8, rect.left) + 'px';
+                    dropdown.style.top = (rect.bottom + 8) + 'px';
+                    dropdown.style.zIndex = '9999';
+                    showDropdown(dropdown);
+                  }
+              }catch(e){ dropdown.classList.remove('hidden'); }
           setAria(true);
           return;
         }
@@ -183,7 +211,10 @@
       // re-evaluate after page load to handle any CSS/render timing issues.
       try{
         const stored = localStorage.getItem('sidebarCollapsed');
-        if(stored === '1') setSidebarCollapsed(true, true);
+        const isDesktopWidth = window.innerWidth > 1100;
+        // Respect user's collapsed preference on small/medium screens,
+        // but ensure desktop widths show expanded sidebar by default.
+        if(stored === '1' && !isDesktopWidth) setSidebarCollapsed(true, true);
         else setSidebarCollapsed(false, false);
       }catch(e){}
       if(sidebarToggle) sidebarToggle.addEventListener('click', ()=>{ const collapsed = document.documentElement.classList.toggle('sidebar-collapsed'); try{ localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0'); }catch(e){} });
@@ -289,6 +320,7 @@
     body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
   </style>
 </head>
+
 <body class="font-display bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
   <div class="flex flex-col md:flex-row h-screen w-full">
     <!-- SideNavBar (hidden on small screens) -->
@@ -303,9 +335,6 @@
               <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="Logo" class="site-logo-sidebar" />
               <span class="text-text-light dark:text-text-dark font-bold text-lg truncate">TaskMaster</span>
             </a>
-            <button id="sidebarCollapseBtn" type="button" aria-label="Kenar çubuğunu daralt/genişlet" class="sidebar-collapse-btn ml-2 bg-subtle-light/60 dark:bg-card-dark text-text-muted-light dark:text-text-muted-dark">
-              <span class="material-symbols-outlined">chevron_left</span>
-            </button>
           </div>
         </div>
         <nav class="flex flex-col gap-2">
@@ -585,14 +614,13 @@
     /* Apply slim-bar look to the hamburger/menu button so it floats on the left edge */
     #mobileMenuBtn{
       position: fixed !important;
-      left: 0.25rem !important;
-      top: 50% !important;
-      transform: translateY(-50%) !important;
+      left: 0.5rem !important;
+      top: 0.6rem !important;
+      transform: none !important;
       z-index: 10020 !important;
       width: 44px !important;
-      height: 120px !important;
-      border-top-right-radius: 12px !important;
-      border-bottom-right-radius: 12px !important;
+      height: 44px !important;
+      border-radius: 10px !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
