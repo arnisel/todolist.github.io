@@ -515,15 +515,41 @@
       if(cancelBtn) cancelBtn.addEventListener('click', ()=>{ if(modal) modal.classList.add('hidden'); });
 
       // color mode toggle (any element with .js-toggle-color)
-      const colorToggles = Array.from(document.querySelectorAll('.js-toggle-color'));
+      function updateColorToggleIcons(){
+        const isDark = document.documentElement.classList.contains('dark');
+        document.querySelectorAll('.js-toggle-color').forEach(btn=>{
+          const icon = btn.querySelector('.material-symbols-outlined');
+          if(!icon) return;
+          icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+          if(isDark) icon.classList.add('fill'); else icon.classList.remove('fill');
+        });
+      }
+
       function setDark(isDark){
         const html = document.documentElement;
         if(isDark) html.classList.add('dark'); else html.classList.remove('dark');
         try{ localStorage.setItem('prefers-dark', isDark ? '1' : '0'); }catch(e){}
+        updateColorToggleIcons();
       }
-      // init from storage
-      try{ if(localStorage.getItem('prefers-dark') === '1') setDark(true); }catch(e){}
-      colorToggles.forEach(btn=> btn && btn.addEventListener('click', ()=>{ const isDark = !document.documentElement.classList.contains('dark'); setDark(isDark); }));
+
+      // init from storage or system preference
+      try{
+        const stored = localStorage.getItem('prefers-dark');
+        if(stored === '1') setDark(true);
+        else if(stored === '0') setDark(false);
+        else {
+          const prefers = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          setDark(!!prefers);
+        }
+      }catch(e){ updateColorToggleIcons(); }
+
+      // use delegated click handling so dynamically inserted toggles also work
+      document.addEventListener('click', function(e){
+        const btn = e.target.closest && e.target.closest('.js-toggle-color');
+        if(!btn) return;
+        const isDark = !document.documentElement.classList.contains('dark');
+        setDark(isDark);
+      });
 
       // view toggles: elements with .js-view-grid and .js-view-list
       const viewGridBtns = Array.from(document.querySelectorAll('.js-view-grid'));

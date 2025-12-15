@@ -11,44 +11,14 @@
         </a>
       </div>
     </div>
+  <button aria-label="Tema değiştir" class="js-toggle-color flex items-center justify-center overflow-hidden rounded-lg h-12 w-12 bg-subtle-light/60 dark:bg-card-dark text-text-light dark:text-text-dark mr-1">
+    <span class="material-symbols-outlined">dark_mode</span>
+  </button>
   <button class="js-open-new-task flex min-w-[84px] cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-12 px-5 bg-primary text-[#1A1A1A] text-base font-bold leading-normal tracking-wide shadow-soft hover:opacity-90 transition-opacity">
     <span class="material-symbols-outlined">add_circle</span>
     <span class="truncate">Hızlı Görev Ekle</span>
   </button>
 </div>
 
-<script>
-(function () {
-  const html = document.documentElement;
-  const STORAGE_KEY = 'prefers-dark';
-
-  function applyTheme(isDark) {
-    html.classList.toggle('dark', isDark);
-    try {
-      localStorage.setItem(STORAGE_KEY, isDark ? '1' : '0');
-    } catch (e) {}
-  }
-
-  // Sayfa ilk yüklenirken
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved === '1') {
-      html.classList.add('dark');
-    } else if (saved === null) {
-      // İlk kez gelen kullanıcı → sistem temasını kullan
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      applyTheme(prefersDark);
-    }
-  } catch (e) {}
-
-  // GLOBAL toggle (her sayfada çalışır)
-  document.addEventListener('click', function (e) {
-    const btn = e.target.closest('.js-toggle-color');
-    if (!btn) return;
-
-    const isDark = !html.classList.contains('dark');
-    applyTheme(isDark);
-  });
-})();
-</script>
+<!-- Header no longer contains its own theme toggle script. Global handler lives in templates/base.html -->
 

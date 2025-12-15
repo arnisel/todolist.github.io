@@ -13,18 +13,21 @@
           </div>
           <h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">Görev Yöneticisi</h2>
         </div>
-        <button class="js-toggle-color flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 w-10 bg-gray-200/50 dark:bg-white/10 text-black dark:text-white text-sm font-bold leading-normal tracking-[0.015em]">
-          <span class="material-symbols-outlined">dark_mode</span>
-        </button>
+        <!-- dark mode toggle moved to page CTA area -->
       </header>
 
       <!-- PageHeading & CTA -->
       <div class="flex flex-wrap items-center justify-between gap-4 p-4 mt-6">
         <p class="text-black dark:text-white text-4xl font-black leading-tight tracking-[-0.033em] min-w-[18rem]">Projelerim</p>
-        <button type="button" class="js-open-new-project flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-black text-sm font-bold leading-normal tracking-[0.015em] gap-2 hover:opacity-90 transition-opacity">
-          <span class="material-symbols-outlined text-lg">add</span>
-          <span class="truncate">Yeni Proje Oluştur</span>
-        </button>
+        <div class="flex items-center gap-3">
+          <button class="js-toggle-color flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 w-10 bg-gray-200/50 dark:bg-white/10 text-black dark:text-white text-sm font-bold leading-normal tracking-[0.015em]">
+            <span class="material-symbols-outlined">dark_mode</span>
+          </button>
+          <button type="button" class="js-open-new-project flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-black text-sm font-bold leading-normal tracking-[0.015em] gap-2 hover:opacity-90 transition-opacity">
+            <span class="material-symbols-outlined text-lg">add</span>
+            <span class="truncate">Yeni Proje Oluştur</span>
+          </button>
+        </div>
       </div>
 
       <!-- SearchBar -->

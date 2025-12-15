@@ -12,13 +12,13 @@
       <div class="min-w-0">
         <h2 class="text-xl md:text-2xl font-bold truncate">Görev Yöneticisi</h2>
         <div class="text-sm text-text-subtle-light dark:text-text-subtle-dark hidden md:block">Gösterge Paneli</div>
+        <div class="mt-2 w-full md:w-auto flex items-center relative">
+          <span class="material-symbols-outlined absolute left-3 text-text-subtle-light dark:text-text-subtle-dark">search</span>
+          <input id="tasksSearch" class="form-input flex w-full md:w-64 min-w-0 resize-none overflow-hidden rounded-lg bg-subtle-light/60 dark:bg-card-dark text-text-light dark:text-text-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border-transparent h-9 placeholder:text-text-subtle-light dark:placeholder:text-text-subtle-dark pl-10 pr-3 text-sm font-normal" placeholder="Görevlerde ara..." value="" />
+        </div>
       </div>
     </div>
     <div class="flex items-center gap-3 mt-3 md:mt-0">
-      <div class="hidden md:flex relative items-center">
-        <span class="material-symbols-outlined absolute left-3 text-text-subtle-light dark:text-text-subtle-dark">search</span>
-        <input id="tasksSearch" class="form-input flex w-64 min-w-0 resize-none overflow-hidden rounded-lg bg-subtle-light/60 dark:bg-card-dark text-text-light dark:text-text-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border-transparent h-10 placeholder:text-text-subtle-light dark:placeholder:text-text-subtle-dark pl-10 pr-4 text-sm font-normal" placeholder="Görevlerde ara..." value=""/>
-      </div>
       <a href="{{ url_for('index') }}" class="text-sm underline hidden sm:inline">Gösterge Paneli</a>
       <a href="{{ url_for('tasks') }}" class="text-sm font-bold hidden sm:inline">Görevler</a>
       <button class="js-open-new-task flex items-center justify-center overflow-hidden rounded-lg h-10 bg-primary text-card-light gap-2 text-sm font-bold min-w-0 px-3">
@@ -104,27 +104,38 @@
     // initial
     applyFiltersAndSort();
 
-    // Search: filter task cards by title, description or project
+    // Search: filter task cards by title, description or project (works with responsive classes)
     (function(){
       const searchInput = document.getElementById('tasksSearch');
       if(!searchInput) return;
       function doSearch(){
         const q = (searchInput.value || '').trim().toLowerCase();
         const cards = Array.from(document.querySelectorAll(cardsSelector));
-        if(!q){
-          cards.forEach(c=> c.style.display = '');
-          applyFiltersAndSort();
-          return;
-        }
+        // gather active status filters
+        const activeStatuses = Array.from(document.querySelectorAll('.filter-checkbox')).filter(cb=>cb.checked).map(cb=>cb.value);
         cards.forEach(c=>{
-          const title = (c.querySelector('p.text-lg') && c.querySelector('p.text-lg').textContent) || '';
-          const desc = (c.querySelector('p.mb-4') && c.querySelector('p.mb-4').textContent) || '';
-          const proj = (c.querySelector('p.text-sm') && c.querySelector('p.text-sm').textContent) || '';
-          const hay = (title + ' ' + desc + ' ' + proj).toLowerCase();
-          c.style.display = hay.includes(q) ? '' : 'none';
+          // find title (font-bold), description (mb-4) and project (font-medium)
+          const titleEl = c.querySelector('p.font-bold');
+          const descEl = c.querySelector('p.mb-4');
+          const projEl = c.querySelector('p.font-medium');
+          const title = (titleEl && titleEl.textContent) || '';
+          const desc = (descEl && descEl.textContent) || '';
+          const proj = (projEl && projEl.textContent) || '';
+          const hay = (title + ' ' + desc + ' ' + proj + ' ' + (c.dataset && c.dataset.priority || '')).toLowerCase();
+
+          const matchesQuery = !q || hay.includes(q);
+          const status = c.dataset.status || '';
+          const matchesStatus = activeStatuses.length === 0 || activeStatuses.includes(status);
+
+          c.style.display = (matchesQuery && matchesStatus) ? '' : 'none';
         });
+        // if a sort is active, re-run to ensure ordering
+        if(currentSort) sortCards(currentSort);
       }
+      // wire into existing filter/change handlers so typing respects filters
       searchInput.addEventListener('input', doSearch);
+      // also update search results when filters change
+      document.querySelectorAll('.filter-checkbox').forEach(cb=> cb.addEventListener('change', doSearch));
     })();
 
     // toggle complete via API
@@ -201,7 +212,6 @@
           <!-- filter panel -->
           <div id="filterPanel" class="hidden absolute left-0 mt-2 w-48 rounded-md bg-card-light dark:bg-card-dark border border-subtle-light/50 dark:border-subtle-dark/40 p-3 shadow-md z-50">
             <label class="flex items-center gap-2"><input type="checkbox" value="todo" class="filter-checkbox"> Yapılacak</label>
-            <label class="flex items-center gap-2"><input type="checkbox" value="in_progress" class="filter-checkbox"> Devam Ediyor</label>
             <label class="flex items-center gap-2"><input type="checkbox" value="done" class="filter-checkbox"> Tamamlandı</label>
           </div>
         </div>
@@ -216,9 +226,8 @@
           </div>
         </div>
         <!-- quick status chips -->
-        <button class="hidden sm:inline-flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-primary/20 text-primary pl-4 pr-4 status-chip" data-status="todo">Yapılacak</button>
-        <button class="hidden sm:inline-flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-subtle-light/60 dark:bg-card-dark pl-4 pr-4 status-chip" data-status="in_progress">Devam Ediyor</button>
-        <button class="hidden sm:inline-flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-subtle-light/60 dark:bg-card-dark pl-4 pr-4 status-chip" data-status="done">Tamamlandı</button>
+        <button class="inline-flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-primary/20 text-primary pl-4 pr-4 status-chip" data-status="todo">Yapılacak</button>
+        <button class="inline-flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-subtle-light/60 dark:bg-card-dark pl-4 pr-4 status-chip" data-status="done">Tamamlandı</button>
       </div>
       <div class="flex items-center gap-2">
         <p class="text-sm text-text-subtle-light dark:text-text-subtle-dark hidden md:block">Görünüm:</p>
