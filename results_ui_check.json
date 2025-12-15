@@ -1,0 +1,32 @@
+{
+  "https://todolist-github-io-go4x.onrender.com": {
+    "title": "TaskMaster - Giriş Yap",
+    "found": {
+      "Görevler": null,
+      "Çıkış": null,
+      "Yeni Görev Ekle": null,
+      "Başlık": null,
+      "Açıklama": null,
+      "Öncelik": null,
+      "İptal": null,
+      "Yüksek": null,
+      "Orta": null,
+      "Düşük": null
+    }
+  },
+  "https://todolist-github-io-go4x.onrender.com/tasks": {
+    "title": "TaskMaster - Giriş Yap",
+    "found": {
+      "Görevler": null,
+      "Çıkış": null,
+      "Yeni Görev Ekle": null,
+      "Başlık": null,
+      "Açıklama": null,
+      "Öncelik": null,
+      "İptal": null,
+      "Yüksek": null,
+      "Orta": null,
+      "Düşük": null
+    }
+  }
+}
