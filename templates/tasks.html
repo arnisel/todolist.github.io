@@ -25,8 +25,8 @@
          
         <span class="hidden sm:inline">Yeni Görev Ekle</span>
       </button>
-      <button class="js-toggle-color flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 w-10 bg-subtle-light/60 dark:bg-card-dark text-text-light dark:text-text-dark">
-         
+      <button class="js-toggle-color flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 w-10 bg-subtle-light/60 dark:bg-card-dark text-text-light dark:text-text-dark" aria-label="Renk modunu değiştir">
+        <span class="icon" aria-hidden="true">🎨</span>
       </button>
     </div>
   </header>
@@ -205,8 +205,8 @@
     <div class="flex flex-col md:flex-row justify-between gap-4 mb-4">
       <div class="flex flex-wrap items-center gap-3">
         <div class="relative">
-          <button id="filterBtn" class="flex items-center gap-2 rounded-lg h-10 px-3 bg-subtle-light/60 dark:bg-card-dark text-sm font-medium">
-             
+          <button id="filterBtn" class="flex items-center gap-2 rounded-lg h-10 px-3 bg-subtle-light/60 dark:bg-card-dark text-sm font-medium" aria-label="Filtrele">
+            <span class="icon" aria-hidden="true">🔍</span>
             Filtrele
           </button>
           <!-- filter panel -->
@@ -216,8 +216,8 @@
           </div>
         </div>
         <div class="relative">
-          <button id="sortBtn" class="flex items-center gap-2 rounded-lg h-10 px-3 bg-subtle-light/60 dark:bg-card-dark text-sm font-medium">
-             
+          <button id="sortBtn" class="flex items-center gap-2 rounded-lg h-10 px-3 bg-subtle-light/60 dark:bg-card-dark text-sm font-medium" aria-label="Sırala">
+            <span class="icon" aria-hidden="true">🔽</span>
             Sırala
           </button>
           <div id="sortPanel" class="hidden absolute left-0 mt-2 w-48 rounded-md bg-card-light dark:bg-card-dark border border-subtle-light/50 dark:border-subtle-dark/40 p-3 shadow-md z-50">
@@ -231,11 +231,11 @@
       </div>
       <div class="flex items-center gap-2">
         <p class="text-sm text-text-subtle-light dark:text-text-subtle-dark hidden md:block">Görünüm:</p>
-        <button class="js-view-grid p-2 rounded-lg bg-primary/20 text-primary">
-           
+        <button class="js-view-grid p-2 rounded-lg bg-primary/20 text-primary" aria-label="Izgara görünümü">
+          <span class="icon" aria-hidden="true">🔳</span>
         </button>
-        <button class="js-view-list p-2 rounded-lg bg-subtle-light/60 dark:bg-card-dark">
-           
+        <button class="js-view-list p-2 rounded-lg bg-subtle-light/60 dark:bg-card-dark" aria-label="Liste görünümü">
+          <span class="icon" aria-hidden="true">📋</span>
         </button>
       </div>
     </div>
@@ -251,8 +251,9 @@
           </div>
           <div class="flex items-center gap-2 shrink-0">
             <span class="text-xs font-bold py-1 px-2.5 rounded-full {% if t.priority == 'high' %}bg-red-500/10 text-red-500{% elif t.priority == 'medium' %}bg-orange-500/10 text-orange-500{% else %}bg-green-500/10 text-green-500{% endif %}">{{ t.priority|capitalize }}</span>
-            <button class="js-delete-task h-8 w-8 flex items-center justify-center rounded-lg border border-subtle-light dark:border-subtle-dark hover:bg-subtle-light/60 dark:hover:bg-subtle-dark text-red-600" data-id="{{ t.id }}" title="Sil">
-               
+            <button class="js-delete-task h-8 w-8 flex items-center justify-center rounded-lg border border-subtle-light dark:border-subtle-dark hover:bg-subtle-light/60 dark:hover:bg-subtle-dark text-red-600" data-id="{{ t.id }}" title="Sil" aria-label="Sil görev">
+              <span class="icon" aria-hidden="true">🗑️</span>
+              <span class="sr-only">Sil</span>
             </button>
           </div>
         </div>
@@ -262,8 +263,9 @@
              
             <span>{{ t.due }}</span>
           </div>
-          <button class="js-toggle-check h-8 w-8 flex items-center justify-center rounded-lg border border-subtle-light dark:border-subtle-dark hover:bg-subtle-light/60 dark:hover:bg-subtle-dark {% if t.status == 'done' %}bg-primary/20 text-primary{% endif %}" data-id="{{ t.id }}">
-             
+          <button class="js-toggle-check h-8 w-8 flex items-center justify-center rounded-lg border border-subtle-light dark:border-subtle-dark hover:bg-subtle-light/60 dark:hover:bg-subtle-dark {% if t.status == 'done' %}bg-primary/20 text-primary{% endif %}" data-id="{{ t.id }}" aria-label="Tamamlandı olarak işaretle">
+            <span class="icon" aria-hidden="true">✔️</span>
+            <span class="sr-only">Tamamlandı</span>
           </button>
         </div>
       </div>
