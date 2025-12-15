@@ -539,7 +539,7 @@ def api_upcoming():
 @app.before_request
 def require_login():
     # Allow unauthenticated access to login, register and static assets
-    allowed_endpoints = ('login', 'register', 'static')
+    allowed_endpoints = ('login', 'register', 'static', 'health')
     endpoint = request.endpoint
     if endpoint is None or endpoint in allowed_endpoints:
         return
