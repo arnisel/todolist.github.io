@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environment
+.venv/
+
+# Editor files
+*.swp
+*.swo
+.vscode/
+
+# Temporary and build files
+tmp_tasks_dump.json
+
+# Database (optional - keep if you want DB in repo)
+# data.db
