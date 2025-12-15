@@ -27,10 +27,10 @@
         <h1 class="text-black dark:text-white tracking-tight text-4xl font-black leading-tight text-left">{{ month_title if month_title is defined else 'Kasım 2023' }}</h1>
         <div class="flex gap-1">
           <a href="{{ url_for('calendar', year=prev_year, month=prev_month) }}" class="p-2 text-text-light/70 dark:text-text-dark/70 hover:text-text-light dark:hover:text-text-dark" title="Önceki ay">
-            <span class="icon" aria-hidden="true">◀</span>
+            ◀
           </a>
           <a href="{{ url_for('calendar', year=next_year, month=next_month) }}" class="p-2 text-text-light/70 dark:text-text-dark/70 hover:text-text-light dark:hover:text-text-dark" title="Sonraki ay">
-            <span class="icon" aria-hidden="true">▶</span>
+            ▶
           </a>
         </div>
       </div>
