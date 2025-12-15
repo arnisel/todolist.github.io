@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom small helpers to complement Tailwind */
+:root { --primary: #D4AF37; }
+
+/* Keep a few simple fallbacks for older browsers */
+.hidden { display: none !important; }
+

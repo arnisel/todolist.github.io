@@ -5,12 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}Görev Yöneticisi{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
-  <style>
-    .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24}
-    .material-symbols-outlined.fill{font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24}
-  </style>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -33,6 +27,177 @@
         boxShadow: { 'soft': '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)'}
       }}
     }
+  </script>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <!-- NOTE: compiled local CSS remains available at static/dist/styles.css if you build it. -->
+  <style>
+    .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24}
+    .material-symbols-outlined.fill{font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24}
+  </style>
+  <!-- Tailwind CDN removed for production safety; minimal fallback CSS below provides
+       essential responsive helpers. To use full Tailwind in production, build a
+       compiled CSS with the Tailwind CLI or PostCSS plugin per Tailwind docs. -->
+  <style>
+    /* Minimal fallback/responsive helpers used when Tailwind CDN isn't compiled for production.
+       These ensure the mobile hamburger and sidebar show/hide behavior works even if
+       Tailwind's utility classes are not present (silences layout breakage/warning). */
+    .hidden { display: none !important; }
+    .mobile-topbar { display: none; }
+    .desktop-sidebar { display: flex; }
+
+    @media (max-width: 767px) {
+      .desktop-sidebar { display: none !important; }
+      .mobile-topbar { display: block !important; }
+      main { padding-top: 4rem; }
+    }
+    @media (min-width: 768px) {
+      .mobile-topbar { display: none !important; }
+      .desktop-sidebar { display: flex !important; }
+    }
+    /* Desktop sidebar collapsed state */
+    .sidebar-collapsed .desktop-sidebar { width: 72px !important; }
+    .sidebar-collapsed .desktop-sidebar .sidebar-brand span { display: none !important; }
+    .sidebar-collapsed .desktop-sidebar nav p { display: none !important; }
+    .sidebar-collapsed .desktop-sidebar nav a { justify-content: center !important; }
+    .sidebar-collapse-btn { display: inline-flex; align-items: center; justify-content: center; width: 36px; height:36px; border-radius:6px; }
+    /* Animated dropdown panel used for mobile menu */
+    .dropdown-panel{ 
+      transition: transform 220ms cubic-bezier(.2,.9,.2,1), opacity 180ms ease-in-out;
+      transform-origin: top left;
+      will-change: transform, opacity;
+      opacity: 0;
+      transform: translateY(-6px) scaleY(.98);
+      pointer-events: none;
+    }
+    .dropdown-open{ opacity: 1; transform: translateY(0) scaleY(1); pointer-events: auto; }
+    .dropdown-closing{ opacity: 0; transform: translateY(-6px) scaleY(.98); pointer-events: none; }
+  </style>
+
+  <script>
+    // Mobile menu toggle handlers (robust: delegated + direct listeners)
+    (function(){
+      const mobileMenu = document.getElementById('mobileMenu');
+      const mobileBtn = document.getElementById('mobileMenuBtn');
+      const closeBtn = document.getElementById('closeMobileMenu');
+      const overlay = document.getElementById('mobileMenuOverlay');
+      // NOTE: lookup dropdown at interaction time (element may be rendered after this script runs)
+
+      function setAria(open){ if(mobileBtn) mobileBtn.setAttribute('aria-expanded', open ? 'true' : 'false'); }
+      // animation helpers for dropdown panels
+      function showDropdown(dropdown){
+        if(!dropdown) return;
+        dropdown.classList.remove('dropdown-closing');
+        dropdown.classList.add('dropdown-panel');
+        dropdown.classList.remove('hidden');
+        // allow a frame for transition to apply
+        requestAnimationFrame(()=>{ dropdown.classList.add('dropdown-open'); });
+      }
+      function hideDropdown(dropdown){
+        if(!dropdown) return;
+        dropdown.classList.remove('dropdown-open');
+        dropdown.classList.add('dropdown-closing');
+        // match CSS transition (220ms + small buffer)
+        setTimeout(()=>{ try{ dropdown.classList.add('hidden'); dropdown.classList.remove('dropdown-closing'); }catch(e){} }, 260);
+      }
+
+      function openMenu(sourceBtn){
+        const button = sourceBtn || mobileBtn || document.getElementById('mobileMenuBtn');
+        const isSmall = window.matchMedia('(max-width:767px)').matches;
+        // lookup dropdown at time of interaction
+        const dropdown = document.getElementById('mobileDropdownGlobal') || document.getElementById('mobileDropdown');
+        if(isSmall && dropdown){
+          // hide off-canvas overlay if present and show compact dropdown
+          if(mobileMenu) mobileMenu.classList.add('hidden');
+          // position the global dropdown under the button
+          try{
+            const rect = (button && button.getBoundingClientRect && button.getBoundingClientRect()) || {left:8, bottom:48};
+            dropdown.style.left = Math.max(8, rect.left) + 'px';
+            dropdown.style.top = (rect.bottom + 8) + 'px';
+            dropdown.style.zIndex = '9999';
+            showDropdown(dropdown);
+          }catch(e){ dropdown.classList.remove('hidden'); }
+          setAria(true);
+          return;
+        }
+        if(mobileMenu) mobileMenu.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+        setAria(true);
+      }
+      function closeMenu(){
+        const dropdown = document.getElementById('mobileDropdownGlobal') || document.getElementById('mobileDropdown');
+        if(dropdown) hideDropdown(dropdown);
+        if(mobileMenu) mobileMenu.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+        setAria(false);
+      }
+
+      // Direct listeners (more reliable in many browsers)
+      if(mobileBtn && typeof mobileBtn.addEventListener === 'function') mobileBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        // If a slide panel exists, prefer toggling it (hamburger now doubles as slide-panel toggle)
+        const slidePanel = document.getElementById('slidePanel');
+        const slideOverlay = document.getElementById('slidePanelOverlay');
+        if(slidePanel){
+          const opened = slidePanel.classList.contains('open');
+          if(opened){
+            slidePanel.classList.remove('open');
+            slidePanel.setAttribute('aria-hidden','true');
+            if(slideOverlay) slideOverlay.classList.remove('visible');
+            try{ document.body.style.overflow = ''; }catch(e){}
+            mobileBtn.setAttribute('aria-expanded','false');
+          } else {
+            slidePanel.classList.add('open');
+            slidePanel.setAttribute('aria-hidden','false');
+            if(slideOverlay) slideOverlay.classList.add('visible');
+            try{ document.body.style.overflow = 'hidden'; }catch(e){}
+            mobileBtn.setAttribute('aria-expanded','true');
+          }
+          return;
+        }
+        openMenu(mobileBtn);
+      });
+      if(closeBtn && typeof closeBtn.addEventListener === 'function') closeBtn.addEventListener('click', function(e){ e.preventDefault(); closeMenu(); });
+      if(overlay && typeof overlay.addEventListener === 'function') overlay.addEventListener('click', function(e){ e.preventDefault(); closeMenu(); });
+
+      // Also attach to any element with class 'js-mobile-menu-toggle' (handles added buttons)
+      const toggles = Array.from(document.querySelectorAll('.js-mobile-menu-toggle')) || [];
+      toggles.forEach(t => { if(t !== mobileBtn && t !== closeBtn) t.addEventListener('click', function(e){ e.preventDefault(); const expanded = mobileMenu && !mobileMenu.classList.contains('hidden'); if(expanded) closeMenu(); else openMenu(e.currentTarget || t); }); });
+
+      // Sidebar collapse toggle for desktop responsiveness
+      const sidebarToggle = document.getElementById('sidebarCollapseBtn');
+      function setSidebarCollapsed(val){ if(val) document.documentElement.classList.add('sidebar-collapsed'); else document.documentElement.classList.remove('sidebar-collapsed'); try{ localStorage.setItem('sidebarCollapsed', val ? '1' : '0'); }catch(e){} }
+      // init from storage or auto-collapse on narrow desktop
+      try{ if(localStorage.getItem('sidebarCollapsed') === '1') setSidebarCollapsed(true); }catch(e){}
+      if(sidebarToggle) sidebarToggle.addEventListener('click', ()=>{ const collapsed = document.documentElement.classList.toggle('sidebar-collapsed'); try{ localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0'); }catch(e){} });
+      // Auto-collapse when window width is small desktop (<= 1100px)
+      function autoCollapse(){ if(window.innerWidth <= 1100) setSidebarCollapsed(true); else { try{ if(localStorage.getItem('sidebarCollapsed') === null) setSidebarCollapsed(false); }catch(e){} }}
+      window.addEventListener('resize', autoCollapse);
+      autoCollapse();
+
+      // Also keep delegated listener for robustness and to close dropdown on outside click
+      document.addEventListener('click', function(e){
+        const btn = e.target.closest && e.target.closest('#mobileMenuBtn');
+        if(btn){ openMenu(btn); return; }
+        if(e.target.closest && (e.target.closest('#closeMobileMenu') || e.target.closest('#mobileMenuOverlay'))){ closeMenu(); return; }
+        // if dropdown open and click outside dropdown and not the button => close
+        const openDropdown = document.getElementById('mobileDropdownGlobal') || document.getElementById('mobileDropdown');
+        if(openDropdown && !openDropdown.classList.contains('hidden')){
+          if(!(e.target.closest && (e.target.closest('#mobileDropdown') || e.target.closest('#mobileDropdownGlobal') || e.target.closest('#mobileMenuBtn')))){
+            closeMenu();
+          }
+        }
+      });
+
+      // close dropdown when clicking on its links (attach to possible dropdown elements)
+      const dd1 = document.getElementById('mobileDropdown');
+      const dd2 = document.getElementById('mobileDropdownGlobal');
+      [dd1, dd2].forEach(dd=>{ if(dd) dd.addEventListener('click', function(e){ const a = e.target.closest && e.target.closest('a'); if(a) closeMenu(); }); });
+
+      // keyboard
+      document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeMenu(); });
+    })();
   </script>
   {% block head_extra %}{% endblock %}
   <style>
@@ -87,17 +252,22 @@
 </head>
 <body class="font-display bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
   <div class="flex h-screen w-full">
-    <!-- SideNavBar -->
-    <aside class="flex w-64 flex-col justify-between bg-card-light dark:bg-card-dark p-6 transition-colors duration-300">
+    <!-- SideNavBar (hidden on small screens) -->
+    <aside class="desktop-sidebar hidden md:flex w-64 flex-col justify-between bg-card-light dark:bg-card-dark p-6 transition-colors duration-300">
       <div class="flex flex-col gap-8">
         <div class="flex items-center gap-3">
           <!-- Sidebar logo + brand name. Two image files supported: 'logo.jpeg' and optional 'logo-dark.png'.
                If 'logo-dark.png' is present it will be shown in dark mode; otherwise the light image will
                be used and an invert filter will apply as a fallback. -->
-          <a href="{{ url_for('index') }}" class="sidebar-brand flex items-center gap-3 no-underline">
-            <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="Logo" class="site-logo-sidebar" />
-            <span class="text-text-light dark:text-text-dark font-bold text-lg truncate">TaskMaster</span>
-          </a>
+          <div class="flex items-center gap-3">
+            <a href="{{ url_for('index') }}" class="sidebar-brand flex items-center gap-3 no-underline">
+              <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="Logo" class="site-logo-sidebar" />
+              <span class="text-text-light dark:text-text-dark font-bold text-lg truncate">TaskMaster</span>
+            </a>
+            <button id="sidebarCollapseBtn" type="button" aria-label="Kenar çubuğunu daralt/genişlet" class="sidebar-collapse-btn ml-2 bg-subtle-light/60 dark:bg-card-dark text-text-muted-light dark:text-text-muted-dark">
+              <span class="material-symbols-outlined">chevron_left</span>
+            </button>
+          </div>
         </div>
         <nav class="flex flex-col gap-2">
           <a class="flex items-center gap-3 rounded px-3 py-2 text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5 {% if request.endpoint == 'tasks' %}bg-primary/20 text-primary{% endif %}" href="{{ url_for('tasks') }}">
@@ -126,8 +296,77 @@
       </div>
     </aside>
 
+    <!-- Mobile top bar (visible on small screens) -->
+    <div class="mobile-topbar md:hidden fixed top-0 left-0 right-0 z-40 bg-card-light dark:bg-card-dark border-b border-border-light dark:border-border-dark p-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <button id="mobileMenuBtn" type="button" aria-controls="mobileMenu" aria-expanded="false" class="js-mobile-menu-toggle p-2 rounded-md bg-subtle-light/60 dark:bg-card-dark text-text-light dark:text-text-dark">
+              <span class="material-symbols-outlined">menu</span>
+            </button>
+            <!-- Mobile dropdown anchored to hamburger: shown on very small viewports -->
+            <div id="mobileDropdown" class="dropdown-panel hidden absolute left-0 mt-2 w-48 bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark rounded shadow-md z-50">
+              <a href="{{ url_for('tasks') }}" class="block px-4 py-2 text-sm text-text-light dark:text-text-dark hover:bg-subtle-light/50">Görevler</a>
+              <a href="{{ url_for('projects') }}" class="block px-4 py-2 text-sm text-text-light dark:text-text-dark hover:bg-subtle-light/50">Projeler</a>
+              <a href="{{ url_for('calendar') }}" class="block px-4 py-2 text-sm text-text-light dark:text-text-dark hover:bg-subtle-light/50">Takvim</a>
+              <a href="{{ url_for('reports') }}" class="block px-4 py-2 text-sm text-text-light dark:text-text-dark hover:bg-subtle-light/50">Raporlar</a>
+            </div>
+          </div>
+          <a href="{{ url_for('index') }}" class="flex items-center gap-3 no-underline">
+            <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="Logo" class="site-logo--small" />
+            <span class="font-bold">TaskMaster</span>
+          </a>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="js-open-new-task p-2 rounded-md bg-primary text-black" type="button">
+            <span class="material-symbols-outlined">add</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile menu (overlay) -->
+    <div id="mobileMenu" class="mobile-overlay hidden md:hidden fixed inset-0 z-50">
+      <div id="mobileMenuOverlay" class="absolute inset-0 bg-black/40"></div>
+      <div class="absolute left-0 top-0 bottom-0 w-72 bg-card-light dark:bg-card-dark p-6 overflow-auto">
+        <div class="flex items-center gap-3 mb-6">
+          <a href="{{ url_for('index') }}" class="flex items-center gap-3 no-underline">
+            <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="Logo" class="site-logo-sidebar" />
+            <span class="text-text-light dark:text-text-dark font-bold text-lg truncate">TaskMaster</span>
+          </a>
+          <button id="closeMobileMenu" type="button" class="js-mobile-menu-toggle ml-auto p-1 rounded text-text-muted-light dark:text-text-muted-dark">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <nav class="flex flex-col gap-2">
+          <a class="flex items-center gap-3 rounded px-3 py-2 text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5" href="{{ url_for('tasks') }}">
+            <span class="material-symbols-outlined text-text-muted-light dark:text-text-muted-dark">task_alt</span>
+            <p class="text-sm font-medium">Görevler</p>
+          </a>
+          <a class="flex items-center gap-3 rounded px-3 py-2 text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5" href="{{ url_for('projects') }}">
+            <span class="material-symbols-outlined text-text-muted-light dark:text-text-muted-dark">cases</span>
+            <p class="text-sm font-medium">Projeler</p>
+          </a>
+          <a class="flex items-center gap-3 rounded px-3 py-2 text-text-light dark:text-text-muted-dark hover:bg-black/5 dark:hover:bg-white/5" href="{{ url_for('calendar') }}">
+            <span class="material-symbols-outlined text-text-muted-light dark:text-text-muted-dark">calendar_today</span>
+            <p class="text-sm font-medium">Takvim</p>
+          </a>
+          <a class="flex items-center gap-3 rounded px-3 py-2 hover:bg-black/5 dark:hover:bg-white/5 text-text-light dark:text-text-dark" href="{{ url_for('reports') }}">
+            <span class="material-symbols-outlined fill">bar_chart</span>
+            <p class="text-sm font-medium">Raporlar</p>
+          </a>
+        </nav>
+        <div class="mt-6">
+          <a class="flex items-center gap-3 rounded px-3 py-2 text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5" href="{{ url_for('logout') }}">
+            <span class="material-symbols-outlined text-text-muted-light dark:text-text-muted-dark">logout</span>
+            <p class="text-sm font-medium">Çıkış</p>
+          </a>
+        </div>
+      </div>
+    </div>
+
     <!-- Main Content -->
-    <main class="flex-1 overflow-y-auto p-8 md:p-12">
+    <main class="flex-1 overflow-y-auto pt-16 md:pt-0 p-8 md:p-12">
       <div class="mx-auto max-w-7xl">
         {% block page_header %}
           {% include '_header.html' %}
@@ -142,7 +381,7 @@
   <!-- New Task Modal (global) -->
   <div id="newTaskModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
     <div class="absolute inset-0 bg-black/40"></div>
-    <div class="relative w-full max-w-xl rounded-lg bg-card-light dark:bg-card-dark p-6 z-10">
+    <div class="relative w-full max-w-full sm:max-w-xl rounded-lg bg-card-light dark:bg-card-dark p-6 z-10">
       <h3 class="text-lg font-bold mb-4">Yeni Görev Ekle</h3>
       <form id="newTaskForm" method="post" action="{{ url_for('add_task') }}" class="space-y-3">
         <input type="hidden" name="next" id="newTaskNext" value="" />
@@ -270,5 +509,139 @@
   </script>
 
   {% block scripts %}{% endblock %}
+  <!-- Slide-in quarter-page panel: slim left bar, overlay and panel -->
+  <style>
+    /* Slide panel basics (semi-transparent with blur) */
+    #slidePanel {
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100vh;
+      z-index: 10010;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(6px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      transform: translateX(-110%);
+      transition: transform 320ms cubic-bezier(.2,.9,.2,1);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      border-right: 1px solid rgba(0,0,0,0.06);
+    }
+    /* Default width: 25% of viewport but constrained for usability */
+    #slidePanel { width: 25vw; min-width: 260px; max-width: 420px; }
+    /* On small screens, occupy larger portion */
+    @media (max-width: 640px){ #slidePanel { width: 80vw; min-width: 220px; } }
+    /* Open state */
+    #slidePanel.open { transform: translateX(0); }
+
+    /* Dark-mode variant for semi-transparency */
+    html.dark #slidePanel { background: rgba(18,18,18,0.88); }
+
+    /* Hide the old left-edge slim button and instead style the hamburger */
+    #slideBarBtn{ display:none !important; }
+    /* Apply slim-bar look to the hamburger/menu button so it floats on the left edge */
+    #mobileMenuBtn{
+      position: fixed !important;
+      left: 0.25rem !important;
+      top: 50% !important;
+      transform: translateY(-50%) !important;
+      z-index: 10020 !important;
+      width: 44px !important;
+      height: 120px !important;
+      border-top-right-radius: 12px !important;
+      border-bottom-right-radius: 12px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      cursor: pointer !important;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12) !important;
+      background: linear-gradient(180deg, rgba(212,175,55,0.98), rgba(212,175,55,0.9)) !important;
+      color: #000 !important;
+      font-weight: 700 !important;
+      border: none !important;
+    }
+    #mobileMenuBtn .material-symbols-outlined{ font-size:28px; transform:rotate(0deg); }
+    /* Overlay */
+    #slidePanelOverlay{ position: fixed; inset:0; background: rgba(0,0,0,0.45); z-index:10005; display:none; }
+    #slidePanelOverlay.visible{ display:block; }
+
+    /* Button list inside panel */
+    #slidePanel nav a{ display:block; padding:0.75rem 1rem; border-radius:8px; margin-bottom:0.5rem; text-decoration:none; color:inherit; }
+    #slidePanel nav a:hover{ background: rgba(0,0,0,0.04); }
+    #slidePanel .panel-header{ display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem; }
+    #slidePanel .panel-title{ font-weight:700; font-size:1.05rem; }
+  </style>
+
+  <!-- Slim bar toggle (click me) -->
+  <button id="slideBarBtn" aria-controls="slidePanel" aria-expanded="false" aria-label="Gezinmeyi aç" title="Gezinmeyi aç">
+    <span class="chev material-symbols-outlined">chevron_right</span>
+  </button>
+
+  <!-- Overlay for the slide panel -->
+  <div id="slidePanelOverlay" aria-hidden="true"></div>
+
+  <!-- Slide-in panel: lists thin/long page buttons vertically -->
+  <aside id="slidePanel" class="" role="dialog" aria-hidden="true" aria-label="Gezinme paneli">
+    <div class="panel-header">
+      <div class="panel-title">Gezinme</div>
+      <button id="closeSlidePanel" aria-label="Kapat" class="ml-auto p-1 rounded text-text-muted-light dark:text-text-muted-dark">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <nav aria-label="Ana gezinme">
+      <a href="{{ url_for('tasks') }}">Görevler</a>
+      <a href="{{ url_for('projects') }}">Projeler</a>
+      <a href="{{ url_for('calendar') }}">Takvim</a>
+      <a href="{{ url_for('reports') }}">Raporlar</a>
+      <a href="{{ url_for('logout') }}">Çıkış</a>
+    </nav>
+    <div class="mt-auto text-sm text-text-muted-light dark:text-text-muted-dark">Kısayollarınızı buraya ekleyin.</div>
+  </aside>
+
+  <script>
+    (function(){
+      const bar = document.getElementById('slideBarBtn') || document.getElementById('mobileMenuBtn');
+      const panel = document.getElementById('slidePanel');
+      const overlay = document.getElementById('slidePanelOverlay');
+      const closeBtn = document.getElementById('closeSlidePanel');
+
+      function openPanel(){
+        if(!panel) return;
+        panel.classList.add('open');
+        panel.setAttribute('aria-hidden','false');
+        if(overlay) overlay.classList.add('visible');
+        if(bar) bar.setAttribute('aria-expanded','true');
+        // prevent body scroll when panel open
+        try{ document.body.style.overflow = 'hidden'; }catch(e){}
+      }
+      function closePanel(){
+        if(!panel) return;
+        panel.classList.remove('open');
+        panel.setAttribute('aria-hidden','true');
+        if(overlay) overlay.classList.remove('visible');
+        if(bar) bar.setAttribute('aria-expanded','false');
+        try{ document.body.style.overflow = ''; }catch(e){}
+      }
+
+      if(bar) bar.addEventListener('click', function(e){ e.preventDefault(); const open = panel.classList.contains('open'); if(open) closePanel(); else openPanel(); });
+      if(closeBtn) closeBtn.addEventListener('click', function(e){ e.preventDefault(); closePanel(); });
+      if(overlay) overlay.addEventListener('click', function(e){ e.preventDefault(); closePanel(); });
+      // close on esc
+      document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closePanel(); });
+      // close when clicking a link inside panel (immediate hide)
+      const nav = panel && panel.querySelector('nav'); if(nav) nav.addEventListener('click', function(e){ const a = e.target.closest && e.target.closest('a'); if(a) closePanel(); });
+    })();
+  </script>
+  <!-- Global mobile dropdown (detached from top to avoid clipping) -->
+  <div id="mobileDropdownGlobal" class="dropdown-panel hidden fixed z-60 bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark rounded shadow-md" style="min-width:160px;">
+    <a href="{{ url_for('tasks') }}" class="block px-4 py-2 text-sm text-text-light dark:text-text-dark hover:bg-subtle-light/50">Görevler</a>
+    <a href="{{ url_for('projects') }}" class="block px-4 py-2 text-sm text-text-light dark:text-text-dark hover:bg-subtle-light/50">Projeler</a>
+    <a href="{{ url_for('calendar') }}" class="block px-4 py-2 text-sm text-text-light dark:text-text-dark hover:bg-subtle-light/50">Takvim</a>
+    <a href="{{ url_for('reports') }}" class="block px-4 py-2 text-sm text-text-light dark:text-text-dark hover:bg-subtle-light/50">Raporlar</a>
+  </div>
 </body>
 </html>
