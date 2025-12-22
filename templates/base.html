@@ -530,7 +530,8 @@
         document.querySelectorAll('.js-toggle-color').forEach(btn=>{
           const icon = btn.querySelector('.material-symbols-outlined');
           if(!icon) return;
-          icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+          // User requested: Dark mode -> Moon, Light mode -> Sun
+          icon.textContent = isDark ? 'dark_mode' : 'light_mode';
           if(isDark) icon.classList.add('fill'); else icon.classList.remove('fill');
         });
       }
