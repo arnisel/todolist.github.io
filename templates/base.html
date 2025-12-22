@@ -529,9 +529,10 @@
         document.querySelectorAll('.js-toggle-color').forEach(btn=>{
           const icon = btn.querySelector('.material-symbols-outlined');
           if(!icon) return;
-          // Toggle icon: Dark mode -> Sun (to switch to light), Light mode -> Moon (to switch to dark)
-          icon.textContent = isDark ? 'light_mode' : 'dark_mode';
-          icon.classList.add('fill');
+          // Show the icon representing the current mode
+          icon.textContent = isDark ? 'dark_mode' : 'light_mode';
+          // Add fill effect for the moon icon (dark mode)
+          if(isDark) icon.classList.add('fill'); else icon.classList.remove('fill');
         });
       }
 
